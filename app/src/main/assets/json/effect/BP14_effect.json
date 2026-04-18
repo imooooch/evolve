@@ -1,0 +1,13 @@
+{
+  "BP14-001": [
+    { "type": "FollowerSelect", "value": 1, "timing": "Triggered" },
+    { "type": "Damage", "value": 4, "timing": "Triggered" },
+    { "type": "Draw", "value": 1, "timing": "Triggered" },
+    { "type": "Draw", "value": 1, "timing": "OnAttack" }
+  ],
+  "BP14-003": [
+    { "type": "FollowerSelect", "value": 1, "timing": "Triggered" },
+    { "type": "Damage", "value": 4, "timing": "Triggered" },
+    { "type": "Draw", "value": 1, "timing": "Triggered" }
+  ]
+}

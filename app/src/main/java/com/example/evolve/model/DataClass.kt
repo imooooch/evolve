@@ -1,0 +1,54 @@
+package com.example.evolve.model
+
+
+import kotlinx.serialization.Serializable
+
+data class CardInfo(
+    val index: Int,
+    val offsetX: Float,
+    val offsetY: Float,
+    val rotation: Float,
+    val card: CardData
+)
+
+@Serializable
+data class Deck(
+    val name: String,
+    val cards: List<CardData>
+)
+
+@Serializable
+data class CardData(
+    val card: String,
+    val expansion: String,
+    val cardclass: String,
+    val name: String,
+    val rare: String?,
+    val kind: String,
+    val type: String,
+    val cost: Int?,
+    val power: Int?,
+    val hp: Int?,
+    val ability: String?,
+    val evolve: String?,
+    val advance: String?,
+    val image: String?,
+    var count: Int,
+    val rotation: Float?,
+    val act: Boolean = false,
+    val isEvolved: Boolean = false,
+    val baseCard: CardData? = null,
+    var isEvolvedCard: Boolean = false,         // このカードが進化後であるか
+    var originalCard: CardData? = null,         // 進化前のカードデータ
+    var isFaceUp: Boolean = false              // 表向きか（画像表示制御用）
+)
+
+data class CardFilter(
+    val maxCost: Int? = null,
+    val kindContains: String? = null
+)
+
+data class CardDataCount(
+    val card: CardData,
+    val count: Int
+)
