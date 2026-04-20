@@ -443,8 +443,8 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
                                 onClick = {
                                     if (cardCounts[card.card] ?: 0 > 0) cardCounts[card.card] =
                                         (cardCounts[card.card] ?: 0) - 1
-                                    updateTempDeck(context, cardCounts, deckCards) //
-                                    refreshCountsFromTemp(context, evolveCount, normalCount) // ✅ 修正
+                                    updateTempDeck(context, cardCounts, deckCards)
+                                    refreshCountsFromTemp(context, evolveCount, normalCount)
                                           },
                                 modifier = Modifier.size(30.dp, 20.dp),
                                 contentPadding = PaddingValues(0.dp)
