@@ -58,7 +58,7 @@ fun DeckDetailScreen(navController: NavController, deckName: String) {
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onLongPress = {
-                                    navController.navigate("card_detail/${card.expansion}/${card.image}")
+                                    navController.navigate("card_detail/${card.expansion}/${card.card}")
                                 }
                             )
                         },
@@ -81,7 +81,7 @@ fun DeckDetailScreen(navController: NavController, deckName: String) {
                             .pointerInput(Unit) {
                                 detectTapGestures(
                                     onLongPress = {
-                                        navController.navigate("card_detail/${card.expansion}/${card.image}")
+                                        navController.navigate("card_detail/${card.expansion}/${card.card}")
                                     }
                                 )
                             },

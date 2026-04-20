@@ -28,6 +28,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import android.content.Context
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.Alignment
 import java.nio.charset.StandardCharsets
 import java.net.URLEncoder
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.example.evolve.ui.components.SingleClickButton
 import com.example.evolve.model.Deck
 import com.example.evolve.model.CardData
+import androidx.compose.foundation.combinedClickable
 
 fun refreshCountsFromTemp(context: Context, evolveCount: MutableState<Int>, normalCount: MutableState<Int>) {
     val tempDeck = loadTempDeck(context)
@@ -151,7 +153,7 @@ fun getCardClassColor(cardclass: String): Color {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DeckEditScreen(navController: NavController, selectedSet: String, initialDeckName: String, from: String)
 {
@@ -366,34 +368,7 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
                 items(filteredDeckCards) { card ->                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(1.dp)
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onLongPress = {
-                                        if (isInitialized) {
-                                            val encodedSet = URLEncoder.encode(
-                                                currentSet,
-                                                StandardCharsets.UTF_8.toString()
-                                            )
-                                            val encodedImage = URLEncoder.encode(
-                                                card.image ?: "",
-                                                StandardCharsets.UTF_8.toString()
-                                            )
-                                            val imagePath =
-                                                "file:///android_asset/images/$currentSet/${card.image}"
-                                            println("Navigate to card_detail: expansion=$encodedSet, image=$encodedImage")
-                                            println("Accessing image path: $imagePath")
-
-                                            navController.navigate(
-                                                "card_detail/$encodedSet/$encodedImage"
-                                            )
-                                        }
-                                    },
-                                    onTap = {
-                                        // ここは後で追加予定のため空にしておく
-                                    }
-                                )
-                            },
+                            .padding(1.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -462,45 +437,52 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
                         }
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(getCardClassColor(card.cardclass)) // ✅ 背景色をここに移動
-                        ) {
-                            Column {
-                                val kindPrefix = buildString {
-                                    if (card.kind.contains("エボルヴ")) append("E   ")
-                                    if (card.kind.contains("アドバンス")) append("A  ")
-                                }
-                                Text(
-                                    text = "$kindPrefix${card.name}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = Color.Black,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = "コスト: ${card.cost}",
-                                    color = Color.Black,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                            Button(
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(getCardClassColor(card.cardclass))
+                            .combinedClickable(
                                 onClick = {
                                     if ((cardCounts[card.card] ?: 0) < 3) {
                                         cardCounts[card.card] = (cardCounts[card.card] ?: 0) + 1
                                         updateDeckAndRefresh()
                                     }
                                 },
-                                modifier = Modifier.fillMaxSize(),
-                                shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = Color.Transparent
-                                ),
-                                contentPadding = PaddingValues(0.dp)
-                            ) {}
+                                onLongClick = {
+                                    if (isInitialized) {
+                                        val encodedSet = URLEncoder.encode(
+                                            currentSet,
+                                            StandardCharsets.UTF_8.toString()
+                                        )
+                                        val encodedCardId = URLEncoder.encode(
+                                            card.card,
+                                            StandardCharsets.UTF_8.toString()
+                                        )
+
+                                        navController.navigate("card_detail/$encodedSet/$encodedCardId")
+                                    }
+                                }
+                            )
+                    ) {
+                        Column {
+                            val kindPrefix = buildString {
+                                if (card.kind.contains("エボルヴ")) append("E   ")
+                                if (card.kind.contains("アドバンス")) append("A  ")
+                            }
+                            Text(
+                                text = "$kindPrefix${card.name}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "コスト: ${card.cost}",
+                                color = Color.Black,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
+                    }
                     }
                 }
             }
