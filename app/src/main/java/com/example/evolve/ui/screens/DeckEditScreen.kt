@@ -50,14 +50,13 @@ import com.example.evolve.model.CardData
 fun refreshCountsFromTemp(context: Context, evolveCount: MutableState<Int>, normalCount: MutableState<Int>) {
     val tempDeck = loadTempDeck(context)
 
-    // ✅ `evolveCount` を再計算
-    evolveCount.value = tempDeck.cards.filter { card ->
-        card.kind.contains("エボルヴ") || card.kind.contains("アドバンス")
-    }.sumOf { it.count }
+    val total = tempDeck.cards.sumOf { it.count }
+    val evolve = tempDeck.cards
+        .filter { it.kind.contains("エボルヴ") || it.kind.contains("アドバンス") }
+        .sumOf { it.count }
 
-    // ✅ `normalCount` を再計算
-    normalCount.value = tempDeck.cards.sumOf { it.count } - evolveCount.value
-
+    evolveCount.value = evolve
+    normalCount.value = total - evolve
 }
 
 fun updateTempDeck(context: Context, cardCounts: Map<String, Int>, deckCards: List<CardModel>) {
@@ -206,7 +205,10 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
 
         isInitialized = true
     }
-
+    fun updateDeckAndRefresh() {
+        updateTempDeck(context, cardCounts, deckCards)
+        refreshCountsFromTemp(context, evolveCount, normalCount)
+    }
 
 
 
@@ -415,10 +417,10 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 onClick = {
-                                    if ((cardCounts[card.card] ?: 0) < 3) cardCounts[card.card] =
-                                        (cardCounts[card.card] ?: 0) + 1
-                                    updateTempDeck(context, cardCounts, deckCards)
-                                    refreshCountsFromTemp(context, evolveCount, normalCount) // ✅ 修正
+                                    if ((cardCounts[card.card] ?: 0) < 3) {
+                                        cardCounts[card.card] = (cardCounts[card.card] ?: 0) + 1
+                                        updateDeckAndRefresh()
+                                    }
                                 },
                                 modifier = Modifier.size(30.dp, 20.dp),
                                 contentPadding = PaddingValues(0.dp)
@@ -441,11 +443,11 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 onClick = {
-                                    if (cardCounts[card.card] ?: 0 > 0) cardCounts[card.card] =
-                                        (cardCounts[card.card] ?: 0) - 1
-                                    updateTempDeck(context, cardCounts, deckCards)
-                                    refreshCountsFromTemp(context, evolveCount, normalCount)
-                                          },
+                                    if ((cardCounts[card.card] ?: 0) > 0) {
+                                        cardCounts[card.card] = (cardCounts[card.card] ?: 0) - 1
+                                        updateDeckAndRefresh()
+                                    }
+                                },
                                 modifier = Modifier.size(30.dp, 20.dp),
                                 contentPadding = PaddingValues(0.dp)
                             ) {
@@ -485,10 +487,10 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
                             }
                             Button(
                                 onClick = {
-                                    if ((cardCounts[card.card] ?: 0) < 3) cardCounts[card.card] =
-                                        (cardCounts[card.card] ?: 0) + 1
-                                    updateTempDeck(context, cardCounts, deckCards)
-                                    refreshCountsFromTemp(context, evolveCount, normalCount)
+                                    if ((cardCounts[card.card] ?: 0) < 3) {
+                                        cardCounts[card.card] = (cardCounts[card.card] ?: 0) + 1
+                                        updateDeckAndRefresh()
+                                    }
                                 },
                                 modifier = Modifier.fillMaxSize(),
                                 shape = RectangleShape,
