@@ -26,12 +26,9 @@ fun CardDetailScreen(
         imagePath = null
 
         val tempDeck = loadTempDeck(context)
-        val tempCard = tempDeck.cards.find { it.card == cardId }
+        val deckCards = loadCardsFromJson(context, expansion)
 
-        val imageName = tempCard?.image ?: run {
-            val deckCards = loadCardsFromJson(context, expansion)
-            deckCards.find { it.card == cardId }?.image
-        }
+        val imageName = deckCards.find { it.card == cardId }?.image
 
         if (!imageName.isNullOrBlank()) {
             delay(10)
