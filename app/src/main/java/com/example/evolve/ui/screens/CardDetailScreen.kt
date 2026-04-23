@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import com.example.evolve.data.CardRepository
 import kotlinx.coroutines.delay
 
 @Composable
@@ -20,15 +21,14 @@ fun CardDetailScreen(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val repository = remember(context) { CardRepository(context) }
     var imagePath by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(expansion, cardId) {
         imagePath = null
 
-        val tempDeck = loadTempDeck(context)
-        val deckCards = loadCardsFromJson(context, expansion)
-
-        val imageName = deckCards.find { it.card == cardId }?.image
+        val card = repository.getCardById(expansion, cardId)
+        val imageName = card?.image
 
         if (!imageName.isNullOrBlank()) {
             delay(10)

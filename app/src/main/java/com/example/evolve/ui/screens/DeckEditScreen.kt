@@ -11,13 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import java.io.File
 import kotlinx.coroutines.launch
 import com.example.evolve.model.CardModel
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,7 +36,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.graphics.RectangleShape
 import coil.compose.AsyncImage
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.platform.LocalFocusManager
@@ -48,6 +44,7 @@ import com.example.evolve.ui.components.SingleClickButton
 import com.example.evolve.model.Deck
 import com.example.evolve.model.CardData
 import androidx.compose.foundation.combinedClickable
+import com.example.evolve.data.CardRepository
 
 fun refreshCountsFromTemp(context: Context, evolveCount: MutableState<Int>, normalCount: MutableState<Int>) {
     val tempDeck = loadTempDeck(context)
@@ -93,7 +90,7 @@ fun updateTempDeck(context: Context, cardCounts: Map<String, Int>, deckCards: Li
                         ability = card.ability ?: "",
                         evolve = card.evolve ?: "",
                         advance = card.advance ?: "",
-                        image = card.image ?: "",
+                        image = card.image,
                         count = count,
                         rotation = 0f
                     ))
@@ -128,17 +125,6 @@ fun loadTempDeck(context: Context): Deck {
     }
 }
 
-
-fun loadCardsFromJson(context: Context, setName: String): List<CardModel> {
-    return try {
-        val jsonString = context.assets.open("json/$setName.json").bufferedReader().use { it.readText() }
-        Json.decodeFromString(jsonString)
-    } catch (e: Exception) {
-        emptyList()
-    }
-}
-
-
 fun getCardClassColor(cardclass: String): Color {
     return when (cardclass) {
         "Elf" -> Color(0xFFDAF2D0)
@@ -158,6 +144,7 @@ fun getCardClassColor(cardclass: String): Color {
 fun DeckEditScreen(navController: NavController, selectedSet: String, initialDeckName: String, from: String)
 {
     val context = LocalContext.current
+    val repository = remember(context) { CardRepository(context) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     var deckCards by remember { mutableStateOf<List<CardModel>>(emptyList()) }
@@ -195,7 +182,7 @@ fun DeckEditScreen(navController: NavController, selectedSet: String, initialDec
         kotlinx.coroutines.delay(3)
 
         // ✅ 新しいセットを読み込み
-        deckCards = loadCardsFromJson(context, currentSet)
+        deckCards = repository.loadCardsFromJson(currentSet)
 
         val tempDeck = loadTempDeck(context)
         cardCounts.clear()

@@ -28,12 +28,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import com.example.evolve.data.CardRepository
 import com.example.evolve.ui.components.SingleClickButton
 import com.example.evolve.model.CardData
 import com.example.evolve.model.Deck
-import com.example.evolve.model.DeckModel
-import com.example.evolve.model.CardModel
-import com.example.evolve.ui.screens.loadCardsFromJson
 import kotlinx.serialization.encodeToString
 
 fun loadDecks(context: Context): List<Deck> {
@@ -67,9 +65,10 @@ fun loadAndRefreshDeck(context: Context, deckName: String): Deck? {
     }
 
     val updatedCards = originalDeck.cards.mapNotNull { deckCard ->
+        val repository = CardRepository(context)
         val cardId = deckCard.card
         val expansion = cardId.substringBefore("-").uppercase()
-        val baseCards = loadCardsFromJson(context, expansion)
+        val baseCards = repository.loadCardsFromJson(expansion)
         Log.d("DeckUpdate", "展開セット: $expansion, 読み込んだカード数: ${baseCards.size}")
 
         val fullData = baseCards.firstOrNull { it.card == cardId }
@@ -88,7 +87,7 @@ fun loadAndRefreshDeck(context: Context, deckName: String): Deck? {
                 ability = card.ability ?: "",
                 evolve = card.evolve ?: "",
                 advance = card.advance ?: "",
-                image = card.image ?: "",
+                image = card.image,
                 count = deckCard.count,
                 rotation = 0f
             )
