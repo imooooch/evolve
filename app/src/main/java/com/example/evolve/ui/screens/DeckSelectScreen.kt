@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.evolve.data.CardRepository
 import com.example.evolve.ui.components.SingleClickButton
 import com.example.evolve.model.CardData
+import com.example.evolve.model.CardModel
 import com.example.evolve.model.Deck
 import kotlinx.serialization.encodeToString
 
@@ -51,6 +52,7 @@ fun loadDecks(context: Context): List<Deck> {
 fun loadAndRefreshDeck(context: Context, deckName: String): Deck? {
     val filesDir = context.getExternalFilesDir(null) ?: return null
     val file = File(filesDir, "$deckName.json")
+    val repository = CardRepository(context)
     if (!file.exists()) return null
 
     val originalDeck = try {
@@ -64,14 +66,19 @@ fun loadAndRefreshDeck(context: Context, deckName: String): Deck? {
         Log.d("DeckUpdate", "元カード: ${it.card}, count=${it.count}")
     }
 
+    val cardCache = mutableMapOf<String, List<CardModel>>()
+
     val updatedCards = originalDeck.cards.mapNotNull { deckCard ->
-        val repository = CardRepository(context)
         val cardId = deckCard.card
         val expansion = cardId.substringBefore("-").uppercase()
-        val baseCards = repository.loadCardsFromJson(expansion)
-        Log.d("DeckUpdate", "展開セット: $expansion, 読み込んだカード数: ${baseCards.size}")
 
-        val fullData = baseCards.firstOrNull { it.card == cardId }
+        val baseCards = cardCache.getOrPut(expansion) {
+            repository.loadCardsFromJson(expansion)
+        }
+
+        val fullData = baseCards.firstOrNull { baseCard ->
+            baseCard.card == cardId
+        }
         fullData?.let { card ->
             CardData(
                 card = card.card,
