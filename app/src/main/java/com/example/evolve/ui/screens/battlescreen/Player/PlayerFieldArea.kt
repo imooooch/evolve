@@ -36,6 +36,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
+import com.example.evolve.ui.components.CardWithStats
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FieldCardSlot(
@@ -116,10 +118,8 @@ fun FieldCardSlot(
                 )
             }
 
-            Image(
-                bitmap = loadCardImage("images/${card.expansion}/${card.image}"),
-                contentDescription = card.name,
-                contentScale = ContentScale.FillBounds,
+            CardWithStats(
+                card = card,
                 modifier = Modifier.fillMaxSize()
             )
         }

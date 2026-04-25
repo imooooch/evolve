@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
+import com.example.evolve.ui.components.CardWithStats
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -103,10 +104,8 @@ fun PlayerEXArea(
                     )
                 }
 
-                Image(
-                    bitmap = loadCardImage("images/${card.expansion}/${card.image}"),
-                    contentDescription = card.name,
-                    contentScale = ContentScale.FillBounds,
+                CardWithStats(
+                    card = card,
                     modifier = Modifier.fillMaxSize()
                 )
             }
