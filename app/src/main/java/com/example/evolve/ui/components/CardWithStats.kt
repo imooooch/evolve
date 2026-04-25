@@ -37,9 +37,9 @@ fun CardWithStats(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 2.dp, bottom = 2.dp)
-                .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
+                .padding(start = 2.dp, bottom = 1.dp)
                 .background(Color(0xFF0D47A1), shape = RoundedCornerShape(4.dp))
+                .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
                 .padding(horizontal = 6.dp, vertical = 2.dp)
         )
 
@@ -50,9 +50,9 @@ fun CardWithStats(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 2.dp, bottom = 2.dp)
-                .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
+                .padding(end = 2.dp, bottom = 1.dp)
                 .background(Color(0xFF8E0000), shape = RoundedCornerShape(4.dp))
+                .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
                 .padding(horizontal = 6.dp, vertical = 2.dp)
         )
     }
