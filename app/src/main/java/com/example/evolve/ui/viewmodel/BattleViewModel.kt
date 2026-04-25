@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import com.example.evolve.model.CardData
 import kotlinx.coroutines.flow.update
 import androidx.compose.ui.geometry.Offset
+import com.example.evolve.battle.BattleInitializer
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -20,16 +21,17 @@ import com.example.evolve.battle.CardMovementHandler
 import com.example.evolve.battle.CardPlayHandler
 import com.example.evolve.battle.CardStateHandler
 import com.example.evolve.battle.DeckLoader
-import com.example.evolve.battle.PlayerState
+
 
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val deckLoader = DeckLoader()
+    private val battleInitializer = BattleInitializer(deckLoader)
     private val turnController = BattleTurnController()
     private val cardStateHandler = CardStateHandler()
     private val cardPlayHandler = CardPlayHandler()
     private val cardMovementHandler = CardMovementHandler()
-    private val deckLoader = DeckLoader()
     private val _battleState = MutableStateFlow<BattleState?>(null)
     val battleState: StateFlow<BattleState?> = _battleState
     private val uiStateController = BattleUiStateController(viewModelScope)
@@ -59,46 +61,17 @@ class BattleViewModel(
     fun loadBattle(context: Context) {
         val deck1Name = savedStateHandle.get<String>("deck1Name") ?: return
         val deck2Name = savedStateHandle.get<String>("deck2Name") ?: return
-        val deck1 = deckLoader.loadDeck(context, deck1Name)
-        val deck2 = deckLoader.loadDeck(context, deck2Name)
+        val isFirstPlayer = savedStateHandle.get<Boolean>("isFirstPlayer") ?: false
 
-        if (deck1 != null && deck2 != null) {
-            val shuffled1 = deck1.cards
-            val shuffled2 = deck2.cards
-            val player1 = PlayerState(name = "Player").apply {
-                deck.addAll(deckLoader.expandDeck(deck1.cards.filterNot {
-                    it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
-                }).shuffled())
-                evolveDeck.addAll(deckLoader.expandDeck(shuffled1.filter {
-                    it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
-                }))
-            }
-            val player2 = PlayerState(name = "Opponent").apply {
-                deck.addAll(deckLoader.expandDeck(deck2.cards.filterNot {
-                    it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
-                }).shuffled())
-                evolveDeck.addAll(deckLoader.expandDeck(shuffled2.filter {
-                    it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
-                }))
-            }
-            val state = BattleState(player1, player2)
-            val isFirstPlayer = savedStateHandle.get<Boolean>("isFirstPlayer") ?: false
+        val state = battleInitializer.createInitialState(
+            context = context,
+            deck1Name = deck1Name,
+            deck2Name = deck2Name,
+            isFirstPlayer = isFirstPlayer
+        ) ?: return
 
-            if (isFirstPlayer) {
-                player1.ep = 0
-                player2.ep = 3
-            } else {
-                player1.ep = 3
-                player2.ep = 0
-            }
-            repeat(18) {
-                if (player1.deck.isNotEmpty()) player1.hand.add(player1.deck.removeAt(0))
-                if (player2.deck.isNotEmpty()) player2.hand.add(player2.deck.removeAt(0))
-            }
-
-            machine = BattleStateMachine(state, context)
-            _battleState.value = state
-        }
+        machine = BattleStateMachine(state, context)
+        _battleState.value = state
     }
 
     val playerEvolveDeck: StateFlow<List<CardData>?>
