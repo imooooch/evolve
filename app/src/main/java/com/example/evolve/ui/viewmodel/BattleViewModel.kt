@@ -293,31 +293,7 @@ class BattleViewModel(
     fun moveFieldCardToEX(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val current =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-
-            if (index !in current.field.indices) return@update state
-
-            val fieldCard = current.field[index]
-            if (fieldCard.isEvolved) {
-                return@update moveEvolvedCardFromField(index, "Ex", state) // ← ✅ これに変更
-            }
-
-            val field = current.field.toMutableList()
-            val ex = current.exArea.toMutableList()
-
-            val rawCard = field.removeAt(index)
-            val card = resetCardState(rawCard)
-            ex.add(card)
-
-            val updatedPlayer = current.copy(field = field, exArea = ex)
-
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
+            cardMovementHandler.moveFieldCardToEX(state, index)
         }
     }
 

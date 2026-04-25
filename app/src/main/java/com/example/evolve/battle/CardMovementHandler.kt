@@ -144,4 +144,38 @@ class CardMovementHandler {
             state.copy(player2 = updatedPlayer)
         }
     }
+    fun moveFieldCardToEX(
+        state: BattleState,
+        index: Int
+    ): BattleState {
+        val currentPlayer =
+            if (state.turnPlayer == state.player1.name) state.player1 else state.player2
+
+        if (index !in currentPlayer.field.indices) return state
+
+        val fieldCard = currentPlayer.field[index]
+
+        if (fieldCard.isEvolved || fieldCard.originalCard != null) {
+            return moveEvolvedCardFromField(index, "Ex", state)
+        }
+
+        val updatedField = currentPlayer.field.toMutableList()
+        val updatedEx = currentPlayer.exArea.toMutableList()
+
+        val originalCard = updatedField.removeAt(index)
+        val resetCard = resetCardState(originalCard)
+        updatedEx.add(resetCard)
+
+        val updatedPlayer = currentPlayer.copy(
+            field = updatedField,
+            exArea = updatedEx
+        )
+
+        return if (state.turnPlayer == state.player1.name) {
+            state.copy(player1 = updatedPlayer)
+        } else {
+            state.copy(player2 = updatedPlayer)
+        }
+    }
+
 }
