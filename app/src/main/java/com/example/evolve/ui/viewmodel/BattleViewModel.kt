@@ -397,34 +397,7 @@ class BattleViewModel(
     fun moveFieldCardToGrave(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val currentPlayer =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-
-            if (index !in currentPlayer.field.indices) return@update state
-
-            val fieldCard = currentPlayer.field[index]
-            if (fieldCard.isEvolved) {
-                return@update moveEvolvedCardFromField(index, "Graveyard", state)
-            }
-
-            val updatedField = currentPlayer.field.toMutableList()
-            val updatedGraveyard = currentPlayer.graveyard.toMutableList()
-
-            val originalCard = updatedField.removeAt(index)
-            val resetCard = resetCardState(originalCard)
-            updatedGraveyard.add(resetCard)
-
-            val updatedPlayer = currentPlayer.copy(
-                field = updatedField,
-                graveyard = updatedGraveyard
-            )
-
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
+            cardMovementHandler.moveFieldCardToGrave(state, index)
         }
     }
 

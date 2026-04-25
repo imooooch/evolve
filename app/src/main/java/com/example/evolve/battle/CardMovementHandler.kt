@@ -78,4 +78,37 @@ class CardMovementHandler {
             state.copy(player2 = finalPlayer)
         }
     }
+    fun moveFieldCardToGrave(
+        state: BattleState,
+        index: Int
+    ): BattleState {
+        val currentPlayer =
+            if (state.turnPlayer == state.player1.name) state.player1 else state.player2
+
+        if (index !in currentPlayer.field.indices) return state
+
+        val fieldCard = currentPlayer.field[index]
+
+        if (fieldCard.isEvolved) {
+            return moveEvolvedCardFromField(index, "Graveyard", state)
+        }
+
+        val updatedField = currentPlayer.field.toMutableList()
+        val updatedGraveyard = currentPlayer.graveyard.toMutableList()
+
+        val originalCard = updatedField.removeAt(index)
+        val resetCard = resetCardState(originalCard)
+        updatedGraveyard.add(resetCard)
+
+        val updatedPlayer = currentPlayer.copy(
+            field = updatedField,
+            graveyard = updatedGraveyard
+        )
+
+        return if (state.turnPlayer == state.player1.name) {
+            state.copy(player1 = updatedPlayer)
+        } else {
+            state.copy(player2 = updatedPlayer)
+        }
+    }
 }
