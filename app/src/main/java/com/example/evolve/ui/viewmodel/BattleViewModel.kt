@@ -9,21 +9,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.example.evolve.model.CardData
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.asStateFlow
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.example.evolve.battle.BattleState
 import com.example.evolve.battle.BattleStateMachine
+import com.example.evolve.battle.CardMovementHandler
 import com.example.evolve.battle.DeckLoader
 import com.example.evolve.battle.PlayerState
-import com.example.evolve.data.CardRepository
 
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
+    private val cardMovementHandler = CardMovementHandler()
     private val deckLoader = DeckLoader()
     private val _battleState = MutableStateFlow<BattleState?>(null)
     val battleState: StateFlow<BattleState?> = _battleState
@@ -355,13 +354,7 @@ class BattleViewModel(
 
     //カード状態のリセット
     fun resetCardState(card: CardData): CardData {
-        return card.copy(
-            act = false,
-            rotation = 0f,
-            isEvolved = false,
-            originalCard = null, // ← ここで常に originalCard を切り離す
-            // 必要に応じて他の状態もリセット
-        )
+        return cardMovementHandler.resetCardState(card)
     }
 
 
