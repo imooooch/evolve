@@ -17,12 +17,14 @@ import com.example.evolve.battle.BattleState
 import com.example.evolve.battle.BattleStateMachine
 import com.example.evolve.battle.CardMovementHandler
 import com.example.evolve.battle.CardPlayHandler
+import com.example.evolve.battle.CardStateHandler
 import com.example.evolve.battle.DeckLoader
 import com.example.evolve.battle.PlayerState
 
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val cardStateHandler = CardStateHandler()
     private val cardPlayHandler = CardPlayHandler()
     private val cardMovementHandler = CardMovementHandler()
     private val deckLoader = DeckLoader()
@@ -207,48 +209,17 @@ class BattleViewModel(
         selectionController.clearSelectedCardIndex()
     }
 
-
     fun rotateFieldCardRight(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val current =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-            val field = current.field.toMutableList()
-            if (index !in field.indices) return@update state
-
-            val rotatedCard = field[index].copy(rotation = 90f)
-            field[index] = rotatedCard
-
-            val updatedPlayer = current.copy(field = field)
-
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
+            cardStateHandler.rotateFieldCardRight(state, index)
         }
     }
 
     fun setFieldCardAct(index: Int, act: Boolean) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val current =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-            val field = current.field.toMutableList()
-            if (index !in field.indices) return@update state
-
-            val updatedCard = field[index].copy(act = act)
-            field[index] = updatedCard
-
-            val updatedPlayer = current.copy(field = field)
-
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
+            cardStateHandler.setFieldCardAct(state, index, act)
         }
     }
 
