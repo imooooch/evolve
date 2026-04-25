@@ -113,10 +113,14 @@ fun PlayerEXArea(
         }
     }
     val selectedIndex = viewModel.selectedExCardIndex.collectAsState().value
-    if (selectedIndex in exCards.indices) {
+
+    if (selectedIndex != null && selectedIndex in exCards.indices) {
+        val selectedCard = exCards[selectedIndex]
+
         val menuY = with(LocalDensity.current) {
             (LocalConfiguration.current.screenHeightDp.dp * 0.699f - exCardHeight - 8.dp).roundToPx()
         }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()

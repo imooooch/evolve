@@ -36,7 +36,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FieldCardSlot(
@@ -45,23 +44,50 @@ fun FieldCardSlot(
     cardWidth: androidx.compose.ui.unit.Dp,
     cardHeight: androidx.compose.ui.unit.Dp,
     isImageShown: Boolean,
-    selectedCardIndex: Int,
+    selectedCardIndex: Int?, // ← Int? に変更
     viewModel: BattleViewModel,
     onClickCard: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
+
+    fun logFieldCardInfo(card: CardData?) {
+        if (card == null) {
+            Log.d("FieldCardCheck", "カードなし")
+            return
+        }
+
+        Log.d(
+            "FieldCardCheck",
+            """
+        表示カード:
+        card=${card.card}
+        name=${card.name}
+        cost=${card.cost}
+        kind=${card.kind}
+        isEvolved=${card.isEvolved}
+
+        originalCard:
+        card=${card.originalCard?.card}
+        name=${card.originalCard?.name}
+        cost=${card.originalCard?.cost}
+        kind=${card.originalCard?.kind}
+        """.trimIndent()
+        )
+    }
     Box(
         modifier = Modifier
+
             .size(cardWidth, cardHeight)
             .graphicsLayer { rotationZ = currentCard?.rotation ?: 0f }
             .combinedClickable(
-                onClick = {
+                        onClick = {
                     coroutineScope.launch {
                         viewModel.clearImageAndMenu()
                         onClickCard()
+
                         if (currentCard != null) {
-                            viewModel.clearImageAndMenu()
-                            onClickCard()
+                            logFieldCardInfo(currentCard)
+
                             Log.d("クリック", "PlayerFieldArea ${index + 1}番 クリック：${currentCard.name}")
                             viewModel.showImageFromCard(currentCard)
                         }
@@ -69,6 +95,8 @@ fun FieldCardSlot(
                 },
                 onLongClick = {
                     if (currentCard != null) {
+                        logFieldCardInfo(currentCard)
+
                         viewModel.highlightFieldCard(index)
                         Log.d("長押し", "PlayerFieldArea 長押し：${currentCard.name}")
                         viewModel.showImageFromCard(currentCard)
@@ -78,6 +106,7 @@ fun FieldCardSlot(
     ) {
         currentCard?.let { card ->
             val highlightIndex by viewModel.highlightFieldCardIndex.collectAsState()
+
             if (selectedCardIndex == index || highlightIndex == index) {
                 Box(
                     modifier = Modifier
@@ -86,6 +115,7 @@ fun FieldCardSlot(
                         .border(1.dp, Color.White.copy(alpha = 0.8f))
                 )
             }
+
             Image(
                 bitmap = loadCardImage("images/${card.expansion}/${card.image}"),
                 contentDescription = card.name,
@@ -161,74 +191,101 @@ fun PlayerFieldArea(
             }
         }
 
-        if (selectedCardIndex in fieldCards.indices) {
-            val fixedIndex = remember(selectedCardIndex) { selectedCardIndex }
+        selectedCardIndex?.let { fixedIndex ->
+            if (fixedIndex in fieldCards.indices) {
+                val row = if (fixedIndex < 3) 0 else 1
+                val col = if (fixedIndex < 3) fixedIndex else fixedIndex - 3
 
-            val row = if (fixedIndex < 3) 0 else 1
-            val col = if (fixedIndex < 3) fixedIndex else fixedIndex - 3
-            val cardBoxStartY = (if (row == 0) 0f else (cardHeight + verticalSpacing).value - 240f).roundToInt()
+                val cardBoxStartY =
+                    (if (row == 0) 0f else (cardHeight + verticalSpacing).value - 240f).roundToInt()
 
-            Row(
-                modifier = Modifier
-                    .zIndex(200f)
-                    .fillMaxWidth()
-                    .offset { IntOffset(0, cardBoxStartY + cardHeight.roundToPx()) }
-                    .zIndex(350f)
-                    .background(Color.Black.copy(alpha = 0.8f))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf("2Grave", "Evolve", "1Attack", "4toEX").forEach { label ->
-                    Box(modifier = Modifier.weight(1f).padding(horizontal = 2.dp)) {
-                        Button(
-                            onClick = {
-                                Log.d("メニュー", "${fieldCards[fixedIndex].name} ${label} が押されました")
-                                when (label) {
-                                    "1Attack" -> {
-                                        viewModel.rotateFieldCardRight(fixedIndex)
-                                        viewModel.setFieldCardAct(fixedIndex, true)
-                                    }
-                                    "2Grave" -> viewModel.moveFieldCardToGrave(fixedIndex)
-                                    "3Banish" -> viewModel.moveFieldCardToBanish(fixedIndex)
-                                    "4toEX" -> viewModel.moveFieldCardToEX(fixedIndex)
-                                    "Evolve" -> {
-                                        val selectedCard = fieldCards.getOrNull(fixedIndex)
-                                        val evolveId = selectedCard?.evolve
+                Row(
+                    modifier = Modifier
+                        .zIndex(200f)
+                        .fillMaxWidth()
+                        .offset { IntOffset(0, cardBoxStartY + cardHeight.roundToPx()) }
+                        .zIndex(350f)
+                        .background(Color.Black.copy(alpha = 0.8f))
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("2Grave", "Evolve", "1Attack", "4toEX").forEach { label ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 2.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    Log.d("メニュー", "${fieldCards[fixedIndex].name} ${label} が押されました")
 
-                                        if (!evolveId.isNullOrBlank()) {
-                                            Log.d("Evolve", "選択カード: ${selectedCard.card} → 進化先: $evolveId")
+                                    when (label) {
+                                        "1Attack" -> {
+                                            viewModel.rotateFieldCardRight(fixedIndex)
+                                            viewModel.setFieldCardAct(fixedIndex, true)
+                                        }
 
-                                            val evolveCard = viewModel.playerEvolveDeck.value?.firstOrNull { it.card == evolveId }
+                                        "2Grave" -> viewModel.moveFieldCardToGrave(fixedIndex)
 
-                                            if (evolveCard != null && selectedCard != null) {
-                                                viewModel.evolveCard(fixedIndex, selectedCard, evolveCard)
+                                        "3Banish" -> viewModel.moveFieldCardToBanish(fixedIndex)
+
+                                        "4toEX" -> viewModel.moveFieldCardToEX(fixedIndex)
+
+                                        "Evolve" -> {
+                                            val selectedCard = fieldCards.getOrNull(fixedIndex)
+                                            val evolveId = selectedCard?.evolve
+
+                                            if (!evolveId.isNullOrBlank() && selectedCard != null) {
+                                                Log.d(
+                                                    "Evolve",
+                                                    "選択カード: ${selectedCard.card} → 進化先: $evolveId"
+                                                )
+                                                val evolveCard = viewModel.playerEvolveDeck.value
+                                                    ?.firstOrNull {
+                                                        it.card == evolveId &&
+                                                                !it.isFaceUp
+                                                    }
+
+                                                if (evolveCard != null) {
+                                                    viewModel.evolveCard(
+                                                        fixedIndex,
+                                                        selectedCard,
+                                                        evolveCard,
+                                                        selectedCard
+                                                    )
+                                                } else {
+                                                    Log.d("Evolve", "使用可能な裏向き進化カードが存在しません")
+                                                }
                                             } else {
-                                                Log.d("Evolve", "進化カードが見つからないか、選択カードが無効です")
+                                                Log.d("Evolve", "進化先IDが設定されていません")
                                             }
-                                        } else {
-                                            Log.d("Evolve", "進化先IDが設定されていません")
                                         }
                                     }
-                                }
-                                coroutineScope.launch {
-                                    delay(100)
-                                    viewModel.clearImageAndMenu()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xB14349FF)),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-                            modifier = Modifier.size(width = 95.dp, height = 46.dp).background(
-                                Color.White.copy(alpha = 0.8f),
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp)
-                            ),
-                            contentPadding = PaddingValues(4.dp)
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Start,
-                                text = label,
-                                modifier = Modifier.fillMaxWidth(),
-                                fontSize = 14.sp
-                            )
+
+                                    coroutineScope.launch {
+                                        delay(100)
+                                        viewModel.clearImageAndMenu()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xB14349FF)
+                                ),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                                modifier = Modifier
+                                    .size(width = 95.dp, height = 46.dp)
+                                    .background(
+                                        Color.White.copy(alpha = 0.8f),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp)
+                                    ),
+                                contentPadding = PaddingValues(4.dp)
+                            ) {
+                                Text(
+                                    textAlign = TextAlign.Start,
+                                    text = label,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                 }
