@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import com.example.evolve.model.CardData
 import kotlinx.coroutines.flow.update
 import androidx.compose.ui.geometry.Offset
+import com.example.evolve.battle.AttackHandler
 import com.example.evolve.battle.BattleInitializer
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -34,6 +35,7 @@ class BattleViewModel(
     private val cardPlayHandler = CardPlayHandler()
     private val cardMovementHandler = CardMovementHandler()
     private val evolveHandler = EvolveHandler()
+    private val attackHandler = AttackHandler()
     private val _battleState = MutableStateFlow<BattleState?>(null)
     val battleState: StateFlow<BattleState?> = _battleState
     private val uiStateController = BattleUiStateController(viewModelScope)
@@ -115,8 +117,7 @@ class BattleViewModel(
     }
 
     fun attackWith(card: CardData) {
-        machine.attackWith(card)
-        _battleState.value = machine.state
+        _battleState.value = attackHandler.attackWith(machine, card)
     }
 
     fun selectHandCard(index: Int?) {
