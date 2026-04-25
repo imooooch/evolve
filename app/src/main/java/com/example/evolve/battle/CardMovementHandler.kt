@@ -111,4 +111,37 @@ class CardMovementHandler {
             state.copy(player2 = updatedPlayer)
         }
     }
+    fun moveFieldCardToBanish(
+        state: BattleState,
+        index: Int
+    ): BattleState {
+        val currentPlayer =
+            if (state.turnPlayer == state.player1.name) state.player1 else state.player2
+
+        if (index !in currentPlayer.field.indices) return state
+
+        val fieldCard = currentPlayer.field[index]
+
+        if (fieldCard.isEvolved || fieldCard.originalCard != null) {
+            return moveEvolvedCardFromField(index, "Banish", state)
+        }
+
+        val updatedField = currentPlayer.field.toMutableList()
+        val updatedBanish = currentPlayer.banish.toMutableList()
+
+        val originalCard = updatedField.removeAt(index)
+        val resetCard = resetCardState(originalCard)
+        updatedBanish.add(resetCard)
+
+        val updatedPlayer = currentPlayer.copy(
+            field = updatedField,
+            banish = updatedBanish
+        )
+
+        return if (state.turnPlayer == state.player1.name) {
+            state.copy(player1 = updatedPlayer)
+        } else {
+            state.copy(player2 = updatedPlayer)
+        }
+    }
 }

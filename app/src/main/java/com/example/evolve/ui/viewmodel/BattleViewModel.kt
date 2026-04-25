@@ -405,40 +405,7 @@ class BattleViewModel(
     fun moveFieldCardToBanish(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val currentPlayer =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-
-            if (index !in currentPlayer.field.indices) return@update state
-
-            val fieldCard = currentPlayer.field[index]
-
-            if (fieldCard.isEvolved || fieldCard.originalCard != null) {
-                Log.d("カード移動", "進化カード、${fieldCard.name} を BanishArea に移動")
-
-                return@update moveEvolvedCardFromField(index, "Banish", state) // ← ✅ これに変更
-            } else if (!(fieldCard.isEvolved || fieldCard.originalCard != null)) {
-                val updatedField = currentPlayer.field.toMutableList()
-                val updatedBanish = currentPlayer.banish.toMutableList()
-
-                val originalCard = updatedField.removeAt(index)
-                val resetCard = resetCardState(originalCard)
-                updatedBanish.add(resetCard)
-
-                Log.d("カード移動", "未進化カード、${resetCard.name} を BanishArea に移動")
-                val updatedPlayer = currentPlayer.copy(
-                    field = updatedField,
-                    banish = updatedBanish
-                )
-
-                return@update if (state.turnPlayer == state.player1.name) {
-                    state.copy(player1 = updatedPlayer)
-                } else {
-                    state.copy(player2 = updatedPlayer)
-                }
-            } else {
-                return@update state
-            }
+            cardMovementHandler.moveFieldCardToBanish(state, index)
         }
     }
 
