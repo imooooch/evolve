@@ -293,26 +293,9 @@ class BattleViewModel(
     fun playCardFromExArea(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-            val current =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-            val exArea = current.exArea.toMutableList()
-            val field = current.field.toMutableList()
-
-            if (index !in exArea.indices) return@update state
-            if (field.size >= 5) return@update state // 例: フィールド最大5枚
-
-            val card = exArea.removeAt(index)
-            field.add(card)
-
-            val updatedPlayer = current.copy(exArea = exArea, field = field)
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
+            cardPlayHandler.playCardFromExArea(state, index)
         }
     }
-
     //カード状態のリセット
     fun resetCardState(card: CardData): CardData {
         return cardMovementHandler.resetCardState(card)
