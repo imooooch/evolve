@@ -16,12 +16,14 @@ import kotlinx.coroutines.flow.stateIn
 import com.example.evolve.battle.BattleState
 import com.example.evolve.battle.BattleStateMachine
 import com.example.evolve.battle.CardMovementHandler
+import com.example.evolve.battle.CardPlayHandler
 import com.example.evolve.battle.DeckLoader
 import com.example.evolve.battle.PlayerState
 
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val cardPlayHandler = CardPlayHandler()
     private val cardMovementHandler = CardMovementHandler()
     private val deckLoader = DeckLoader()
     private val _battleState = MutableStateFlow<BattleState?>(null)
@@ -212,24 +214,7 @@ class BattleViewModel(
     fun playCardFromHand(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val hand = state.player1.hand.toMutableList()
-            if (index !in hand.indices) return@update state
-
-            val card = hand[index]
-            hand.removeAt(index)
-
-            val field = state.player1.field.toMutableList()
-            if ((card.kind.contains("フォロワー") || card.kind.contains("アミュレット")) && field.size < 5) {
-                field.add(card) // 同種のカードでOKなためそのまま追加
-            }
-
-            state.copy(
-                player1 = state.player1.copy(
-                    hand = hand,
-                    field = field
-                )
-            )
+            cardPlayHandler.playCardFromHand(state, index)
         }
     }
 
