@@ -113,13 +113,6 @@ class BattleViewModel(
         }
     }
 
-    fun playCard(index: Int) {
-        _battleState.update { state ->
-            state ?: return@update null
-            cardPlayHandler.playCard(state, index)
-        }
-    }
-
     fun evolveCard(
         index: Int,
         baseCard: CardData,

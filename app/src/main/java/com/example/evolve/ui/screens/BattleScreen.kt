@@ -415,7 +415,6 @@
                     .align(Alignment.TopEnd),
                 count = playerGraveyardCount
             )
-
             PlayerHandArea(
                 modifier = Modifier
                     .fillMaxSize()
@@ -423,7 +422,7 @@
                 cards = playerHand,
                 viewModel = viewModel,
                 onCardPlayed = { index ->
-                    viewModel.playCard(index)
+                    viewModel.playCardFromHand(index)
                     viewModel.clearImageAndMenu()
                 }
             )
