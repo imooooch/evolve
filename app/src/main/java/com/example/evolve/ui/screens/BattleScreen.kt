@@ -340,8 +340,7 @@
                 count = playerDeckCount
             )
 
-            val facedownCount = viewModel.playerEvolveDeckFacedown.value?.size ?: 0
-
+            val facedownCount = evolveCards.count { !it.isFaceUp }
             PlayerEvolveDeckCountArea(
                 modifier = Modifier
                     .size(
