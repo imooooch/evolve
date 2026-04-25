@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.example.evolve.battle.BattleState
 import com.example.evolve.battle.BattleStateMachine
+import com.example.evolve.battle.BattleTurnController
 import com.example.evolve.battle.CardMovementHandler
 import com.example.evolve.battle.CardPlayHandler
 import com.example.evolve.battle.CardStateHandler
@@ -24,6 +25,7 @@ import com.example.evolve.battle.PlayerState
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val turnController = BattleTurnController()
     private val cardStateHandler = CardStateHandler()
     private val cardPlayHandler = CardPlayHandler()
     private val cardMovementHandler = CardMovementHandler()
@@ -110,9 +112,12 @@ class BattleViewModel(
 
     fun startTurn() {
         _battleState.value?.let {
-            machine.startTurn()
-            _battleState.value = machine.state
+            _battleState.value = turnController.startTurn(machine)
         }
+    }
+
+    fun endTurn() {
+        _battleState.value = turnController.endTurn(machine)
     }
 
     fun evolveCard(
@@ -170,11 +175,6 @@ class BattleViewModel(
 
     fun attackWith(card: CardData) {
         machine.attackWith(card)
-        _battleState.value = machine.state
-    }
-
-    fun endTurn() {
-        machine.endTurnPhase()
         _battleState.value = machine.state
     }
 
