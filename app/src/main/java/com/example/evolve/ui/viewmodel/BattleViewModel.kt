@@ -21,6 +21,7 @@ import com.example.evolve.battle.CardMovementHandler
 import com.example.evolve.battle.CardPlayHandler
 import com.example.evolve.battle.CardStateHandler
 import com.example.evolve.battle.DeckLoader
+import com.example.evolve.battle.EvolveHandler
 
 
 class BattleViewModel(
@@ -32,6 +33,7 @@ class BattleViewModel(
     private val cardStateHandler = CardStateHandler()
     private val cardPlayHandler = CardPlayHandler()
     private val cardMovementHandler = CardMovementHandler()
+    private val evolveHandler = EvolveHandler()
     private val _battleState = MutableStateFlow<BattleState?>(null)
     val battleState: StateFlow<BattleState?> = _battleState
     private val uiStateController = BattleUiStateController(viewModelScope)
@@ -102,47 +104,13 @@ class BattleViewModel(
         _battleState.update { state ->
             state ?: return@update null
 
-            val player =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-
-            if (index !in player.field.indices) return@update state
-            if (player.field[index].card != baseCard.card) return@update state
-            if (player.field[index].isEvolved) return@update state
-
-            val newEvolveDeck = player.evolveDeck.toMutableList()
-
-            val removeIndex = newEvolveDeck.indexOfFirst {
-                it.card == evolvedCardData.card && !it.isFaceUp
-            }
-
-            if (removeIndex == -1) {
-                return@update state
-            }
-
-            newEvolveDeck.removeAt(removeIndex)
-
-            val evolvedCard = evolvedCardData.copy(
-                isEvolved = true,
-                originalCard = originalBaseCard,
-                isFaceUp = true,
-                act = baseCard.act,
-                rotation = baseCard.rotation
+            evolveHandler.evolveCard(
+                state = state,
+                index = index,
+                baseCard = baseCard,
+                evolvedCardData = evolvedCardData,
+                originalBaseCard = originalBaseCard
             )
-
-            val newField = player.field.toMutableList().apply {
-                set(index, evolvedCard)
-            }
-
-            val updatedPlayer = player.copy(
-                field = newField,
-                evolveDeck = newEvolveDeck
-            )
-
-            if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
         }
     }
 
