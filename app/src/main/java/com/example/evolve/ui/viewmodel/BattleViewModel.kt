@@ -116,23 +116,7 @@ class BattleViewModel(
     fun playCard(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-
-            val current =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-            val card = current.hand.getOrNull(index) ?: return@update state
-
-            val newHand = current.hand.toMutableList().apply { removeAt(index) }
-            val newField = current.field.toMutableList().apply {
-                if (size < 5) add(card)
-            }
-
-            val updatedPlayer = current.copy(hand = newHand, field = newField)
-
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
+            cardPlayHandler.playCard(state, index)
         }
     }
 
