@@ -66,7 +66,11 @@ fun PlayerEvolveDeckArea(
             }
         }
     } else if (evolveCards.isNotEmpty()) {
-        Box(modifier = modifier) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .clickable { showOverlay = true }
+        ) {
             Image(
                 bitmap = loadBackgroundImage("images/battle/Back.jpg"),
                 contentDescription = evolveCards.last().name,
@@ -145,12 +149,15 @@ fun PlayerEvolveDeckArea(
                                 .fillMaxHeight(0.92f)
                         ) {
                             val groupedCards =
-                                evolveCards.groupBy { it.card }.map { (cardId, cards) ->
+                                evolveCards.groupBy { it.card }.map { (_, cards) ->
                                     val representative = cards.first()
-                                    val count = cards.size
-                                    representative to count
+                                    val faceUpCount = cards.count { it.isFaceUp }
+                                    val faceDownCount = cards.count { !it.isFaceUp }
+
+                                    Triple(representative, faceUpCount, faceDownCount)
                                 }
-                            items(groupedCards) { (card, count) ->
+
+                            items(groupedCards) { (card, faceUpCount, faceDownCount) ->
                                 val isSelected = selectedCard?.card == card.card
                                 Row(
                                     modifier = Modifier
@@ -173,10 +180,10 @@ fun PlayerEvolveDeckArea(
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     Text(
-                                        text = "$count x",
+                                        text = "表${faceUpCount}\n裏${faceDownCount}",
                                         color = if (isSelected) Color.LightGray else Color.Black,
-                                        fontSize = 16.sp,
-                                        modifier = Modifier.width(32.dp)
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.width(52.dp)
                                     )
                                     Image(
                                         bitmap = loadCardImage("images/${card.expansion}/${card.image}"),

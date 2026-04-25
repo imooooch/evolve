@@ -7,70 +7,72 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import com.example.evolve.battle.*
 import com.example.evolve.model.CardData
 import kotlinx.coroutines.flow.update
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.io.File
-import androidx.lifecycle.viewModelScope
-
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-
-
-@Serializable
-data class Deck(val name: String, val cards: List<CardData>)
+import com.example.evolve.battle.BattleState
+import com.example.evolve.battle.BattleStateMachine
+import com.example.evolve.battle.DeckLoader
+import com.example.evolve.battle.PlayerState
+import com.example.evolve.data.CardRepository
 
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // ✅ 画像表示用の状態
-    private val _selectedImagePath = MutableStateFlow("")
-    val selectedImagePath: StateFlow<String> = _selectedImagePath
+    private val deckLoader = DeckLoader()
+    private val _battleState = MutableStateFlow<BattleState?>(null)
+    val battleState: StateFlow<BattleState?> = _battleState
+    private val uiStateController = BattleUiStateController(viewModelScope)
+    val selectedImagePath = uiStateController.selectedImagePath
+    val tapEffectOffset = uiStateController.tapEffectOffset
+    private val selectionController = BattleSelectionController()
+
+    val selectedHandIndex = selectionController.selectedHandIndex
+    val selectedCardIndex = selectionController.selectedCardIndex
+    val selectedExCardIndex = selectionController.selectedExCardIndex
+
+    val highlightCardIndex = selectionController.highlightCardIndex
+    val highlightFieldCardIndex = selectionController.highlightFieldCardIndex
+    val highlightExCardIndex = selectionController.highlightExCardIndex
 
     fun showImage(path: String) {
-        _selectedImagePath.value = path
+        uiStateController.showImage(path)
     }
 
     fun clearImage() {
-        _selectedImagePath.value = ""
+        uiStateController.clearImage()
     }
 
-    private val _battleState = MutableStateFlow<BattleState?>(null)
-    val battleState: StateFlow<BattleState?> = _battleState
 
     private lateinit var machine: BattleStateMachine
 
     fun loadBattle(context: Context) {
         val deck1Name = savedStateHandle.get<String>("deck1Name") ?: return
         val deck2Name = savedStateHandle.get<String>("deck2Name") ?: return
-        val deck1 = loadDeck(context, deck1Name)
-        val deck2 = loadDeck(context, deck2Name)
+        val deck1 = deckLoader.loadDeck(context, deck1Name)
+        val deck2 = deckLoader.loadDeck(context, deck2Name)
 
         if (deck1 != null && deck2 != null) {
             val shuffled1 = deck1.cards
             val shuffled2 = deck2.cards
             val player1 = PlayerState(name = "Player").apply {
-                deck.addAll(expandDeck(deck1.cards.filterNot {
+                deck.addAll(deckLoader.expandDeck(deck1.cards.filterNot {
                     it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
                 }).shuffled())
-                evolveDeck.addAll(expandDeck(shuffled1.filter {
+                evolveDeck.addAll(deckLoader.expandDeck(shuffled1.filter {
                     it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
                 }))
             }
             val player2 = PlayerState(name = "Opponent").apply {
-                deck.addAll(expandDeck(deck2.cards.filterNot {
+                deck.addAll(deckLoader.expandDeck(deck2.cards.filterNot {
                     it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
                 }).shuffled())
-                evolveDeck.addAll(expandDeck(shuffled2.filter {
+                evolveDeck.addAll(deckLoader.expandDeck(shuffled2.filter {
                     it.kind.contains("エボルヴ") || it.kind.contains("アドバンス")
                 }))
             }
@@ -133,30 +135,44 @@ class BattleViewModel(
         }
     }
 
-    fun evolveCard(index: Int, baseCard: CardData, evolvedCardData: CardData) {
-        val evolvedCard = evolvedCardData.copy(
-            isEvolved = true,
-            originalCard = baseCard,
-            isFaceUp = true,
-            act = baseCard.act,              // ← act状態を引き継ぐ
-            rotation = baseCard.rotation     // ← rotationも引き継ぐ
-        )
-
-
+    fun evolveCard(
+        index: Int,
+        baseCard: CardData,
+        evolvedCardData: CardData,
+        originalBaseCard: CardData
+    ) {
         _battleState.update { state ->
             state ?: return@update null
+
             val player =
                 if (state.turnPlayer == state.player1.name) state.player1 else state.player2
 
             if (index !in player.field.indices) return@update state
-            if (player.field[index].card != baseCard.card || player.field[index].isEvolved) return@update state
+            if (player.field[index].card != baseCard.card) return@update state
+            if (player.field[index].isEvolved) return@update state
+
+            val newEvolveDeck = player.evolveDeck.toMutableList()
+
+            val removeIndex = newEvolveDeck.indexOfFirst {
+                it.card == evolvedCardData.card && !it.isFaceUp
+            }
+
+            if (removeIndex == -1) {
+                return@update state
+            }
+
+            newEvolveDeck.removeAt(removeIndex)
+
+            val evolvedCard = evolvedCardData.copy(
+                isEvolved = true,
+                originalCard = originalBaseCard,
+                isFaceUp = true,
+                act = baseCard.act,
+                rotation = baseCard.rotation
+            )
 
             val newField = player.field.toMutableList().apply {
                 set(index, evolvedCard)
-            }
-
-            val newEvolveDeck = player.evolveDeck.toMutableList().apply {
-                removeIf { it.card == evolvedCard.card }
             }
 
             val updatedPlayer = player.copy(
@@ -164,7 +180,7 @@ class BattleViewModel(
                 evolveDeck = newEvolveDeck
             )
 
-            return@update if (state.turnPlayer == state.player1.name) {
+            if (state.turnPlayer == state.player1.name) {
                 state.copy(player1 = updatedPlayer)
             } else {
                 state.copy(player2 = updatedPlayer)
@@ -182,36 +198,16 @@ class BattleViewModel(
         _battleState.value = machine.state
     }
 
-    private fun expandDeck(cards: List<CardData>): List<CardData> {
-        return cards.flatMap { card -> List(card.count) { card.copy() } }
-    }
-
-    private fun loadDeck(context: Context, deckName: String): Deck? {
-        val file = File(context.getExternalFilesDir(null), "$deckName.json")
-        return if (file.exists()) {
-            try {
-                val text = file.readText()
-                Json { ignoreUnknownKeys = true }.decodeFromString<Deck>(text)
-            } catch (e: Exception) {
-                null
-            }
-        } else null
-    }
-
-    private val _selectedHandIndex = MutableStateFlow(-1)
-    val selectedHandIndex: StateFlow<Int> = _selectedHandIndex
-
-    fun selectHandCard(index: Int) {
-        _selectedHandIndex.value = index
+    fun selectHandCard(index: Int?) {
+        selectionController.selectHandCard(index)
     }
 
     fun clearSelectedCard() {
-        _selectedHandIndex.value = -1
+        selectionController.clearSelectedHandCard()
     }
 
     fun showImageFromCard(card: CardData) {
-        Log.d("拡大画像", "showImageFromCard 拡大表示: ${card.name}")
-        _selectedImagePath.value = "images/${card.expansion}/${card.image}"
+        uiStateController.showImageFromCard(card.expansion, card.image)
     }
 
     fun playCardFromHand(index: Int) {
@@ -238,27 +234,16 @@ class BattleViewModel(
         }
     }
 
-    private val _tapEffectOffset = MutableStateFlow<Offset?>(null)
-    val tapEffectOffset: StateFlow<Offset?> = _tapEffectOffset.asStateFlow()
-
-
     fun spawnTapEffect(position: Offset) {
-        _tapEffectOffset.value = position
-        viewModelScope.launch {
-            delay(300L)
-            _tapEffectOffset.value = null
-        }
+        uiStateController.spawnTapEffect(position)
     }
 
-    private val _selectedCardIndex = MutableStateFlow(-1)
-    val selectedCardIndex: StateFlow<Int> = _selectedCardIndex.asStateFlow()
-
-    fun setSelectedCardIndex(index: Int) {
-        _selectedCardIndex.value = index
+    fun setSelectedCardIndex(index: Int?) {
+        selectionController.setSelectedCardIndex(index)
     }
 
     fun clearSelectedCardIndex() {
-        _selectedCardIndex.value = -1
+        selectionController.clearSelectedCardIndex()
     }
 
 
@@ -337,15 +322,12 @@ class BattleViewModel(
         }
     }
 
-    private val _selectedExCardIndex = MutableStateFlow(-1)
-    val selectedExCardIndex = _selectedExCardIndex.asStateFlow()
-
-    fun setSelectedExCardIndex(index: Int) {
-        _selectedExCardIndex.value = index
+    fun setSelectedExCardIndex(index: Int?) {
+        selectionController.setSelectedExCardIndex(index)
     }
 
     fun clearSelectedExCardIndex() {
-        _selectedExCardIndex.value = -1
+        selectionController.clearSelectedExCardIndex()
     }
 
     fun playCardFromExArea(index: Int) {
@@ -393,36 +375,28 @@ class BattleViewModel(
     }
 
     //PlayerHandArea
-    private val _highlightCardIndex = MutableStateFlow(-1)
-    val highlightCardIndex = _highlightCardIndex.asStateFlow()
-    fun highlightCard(index: Int) {
-        _highlightCardIndex.value = index
+    fun highlightCard(index: Int?) {
+        selectionController.highlightCard(index)
     }
-
     fun clearHighlight() {
-        _highlightCardIndex.value = -1
+        selectionController.clearHighlight()
     }
 
     //PlayerFieldArea
-    private val _highlightFieldCardIndex = MutableStateFlow(-1)
-    val highlightFieldCardIndex: StateFlow<Int> = _highlightFieldCardIndex
-    fun highlightFieldCard(index: Int) {
-        _highlightFieldCardIndex.value = index
+    fun highlightFieldCard(index: Int?) {
+        selectionController.highlightFieldCard(index)
     }
 
     fun clearFieldHighlight() {
-        _highlightFieldCardIndex.value = -1
+        selectionController.clearFieldHighlight()
     }
-
     //PlayerExArea
-    private val _highlightExCardIndex = MutableStateFlow(-1)
-    val highlightExCardIndex = _highlightExCardIndex.asStateFlow()
-    fun highlightExCard(index: Int) {
-        _highlightExCardIndex.value = index
+    fun highlightExCard(index: Int?) {
+        selectionController.highlightExCard(index)
     }
 
     fun clearHighlightExCard() {
-        _highlightExCardIndex.value = -1
+        selectionController.clearHighlightExCard()
     }
 
 
@@ -438,8 +412,7 @@ class BattleViewModel(
 
             val fieldCard = currentPlayer.field[index]
             if (fieldCard.isEvolved) {
-                return@update moveEvolvedCardFromField(index, "Graveyard", state) // ← ✅ これに変更
-                return@update state
+                return@update moveEvolvedCardFromField(index, "Graveyard", state)
             }
 
             val updatedField = currentPlayer.field.toMutableList()
@@ -503,145 +476,6 @@ class BattleViewModel(
         }
     }
 
-    fun overlayEvolveCardOnField(index: Int, evolveCard: CardData) {
-        _battleState.update { state ->
-            state ?: return@update null
-
-            val currentPlayer =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-
-            if (index !in currentPlayer.field.indices) return@update state
-
-            val updatedField = currentPlayer.field.toMutableList()
-            val updatedEvolveDeck = currentPlayer.evolveDeck.toMutableList()
-
-            val baseCard = updatedField[index]
-            val evolved = baseCard.copy(
-                name = evolveCard.name,
-                image = evolveCard.image,
-                power = evolveCard.power,
-                hp = evolveCard.hp,
-                kind = evolveCard.kind,
-                type = evolveCard.type,
-                evolve = null,
-                isEvolved = true // ✅ 進化状態をフラグで管理
-            )
-
-            updatedField[index] = evolved
-            updatedEvolveDeck.remove(evolveCard)
-
-            val updatedPlayer = currentPlayer.copy(
-                field = updatedField,
-                evolveDeck = updatedEvolveDeck
-            )
-
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
-        }
-    }
-
-    fun moveEvolvedCardToEvolveDeck(index: Int) {
-        _battleState.update { state ->
-            state ?: return@update null
-
-            val player =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-            val fieldCard = player.field.getOrNull(index) ?: return@update state
-
-            val updatedField = player.field.toMutableList().apply { removeAt(index) }
-            val updatedEvolveDeck = player.evolveDeck.toMutableList().apply {
-                add(
-                    resetCardState(fieldCard).copy(
-                        act = false,
-                        rotation = 0f,
-                        isFaceUp = true,
-                        isEvolved = false,
-                        originalCard = null
-                    )
-                )
-            }
-
-            val updatedPlayer =
-                player.copy(field = updatedField, evolveDeck = updatedEvolveDeck)
-            return@update if (state.turnPlayer == state.player1.name) {
-                state.copy(player1 = updatedPlayer)
-            } else {
-                state.copy(player2 = updatedPlayer)
-            }
-        }
-    }
-
-    fun removeEvolvedCardFromField(index: Int, destination: String) {
-        _battleState.update { state ->
-            state ?: return@update null
-            val player =
-                if (state.turnPlayer == state.player1.name) state.player1 else state.player2
-            val fieldCard = player.field.getOrNull(index) ?: return@update state
-
-            // 進化状態かどうか確認（originalCardがあるかで判定）
-            if (fieldCard.originalCard != null) {
-                val baseCard = resetCardState(fieldCard.originalCard!!) // 進化前カード
-                val evolvedCard = fieldCard.copy(
-                    act = false,
-                    rotation = 0f,
-                    isEvolvedCard = false,
-                    originalCard = null,
-                    isFaceUp = true
-                )
-
-                val updatedField = player.field.toMutableList().apply { removeAt(index) }
-                val updatedEvolveDeck =
-                    player.evolveDeck.toMutableList().apply { add(evolvedCard) }
-
-                val updatedPlayer = when (destination) {
-                    "Graveyard" -> player.copy(
-                        field = updatedField,
-                        evolveDeck = updatedEvolveDeck,
-                        graveyard = player.graveyard.toMutableList().apply { add(baseCard) }
-                    )
-
-                    "Banish" -> player.copy(
-                        field = updatedField,
-                        evolveDeck = updatedEvolveDeck,
-                        banish = player.banish.toMutableList().apply { add(baseCard) }
-                    )
-
-                    "Deck" -> player.copy(
-                        field = updatedField,
-                        evolveDeck = updatedEvolveDeck,
-                        deck = player.deck.toMutableList().apply { add(baseCard) }
-                    )
-
-                    "Hand" -> player.copy(
-                        field = updatedField,
-                        evolveDeck = updatedEvolveDeck,
-                        hand = player.hand.toMutableList().apply { add(baseCard) }
-                    )
-
-                    "Ex" -> player.copy(
-                        field = updatedField,
-                        evolveDeck = updatedEvolveDeck,
-                        exArea = player.exArea.toMutableList().apply { add(baseCard) }
-                    )
-
-
-                    else -> player.copy(field = updatedField, evolveDeck = updatedEvolveDeck)
-                }
-
-                return@update if (state.turnPlayer == state.player1.name) {
-                    state.copy(player1 = updatedPlayer)
-                } else {
-                    state.copy(player2 = updatedPlayer)
-                }
-            } else {
-                state // 通常カードなので何もせず
-            }
-        }
-    }
-
     fun moveEvolvedCardFromField(index: Int, destination: String, state: BattleState): BattleState {
         val currentPlayer =
             if (state.turnPlayer == state.player1.name) state.player1 else state.player2
@@ -659,7 +493,15 @@ class BattleViewModel(
         )
 
         val updatedEvolveDeck = currentPlayer.evolveDeck.toMutableList().apply {
-            add(evolvedCard.copy(isFaceUp = true)) // 表向きで追加
+            add(
+                resetCardState(evolvedCard).copy(
+                    isFaceUp = true,
+                    isEvolved = false,
+                    originalCard = null,
+                    act = false,
+                    rotation = 0f
+                )
+            )
         }
 
         val updatedPlayerBeforeField = when (destination) {

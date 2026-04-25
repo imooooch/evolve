@@ -72,9 +72,10 @@ fun PlayerHandArea(
     val selectedHandIndex by viewModel.selectedHandIndex.collectAsState()
 
     LaunchedEffect(isDragging.value, selectedHandIndex, cards.size) {
-        val validCard = selectedHandIndex in cards.indices
-        if (validCard) {
-            viewModel.showImageFromCard(cards[selectedHandIndex])
+        val validIndex = selectedHandIndex
+
+        if (validIndex != null && validIndex in cards.indices) {
+            viewModel.showImageFromCard(cards[validIndex])
         } else {
             viewModel.clearImageAndMenu()
         }
@@ -143,12 +144,18 @@ fun PlayerHandArea(
                                             }
 
                                             if (move.changedToUp()) {
-                                                if (dragOffset.value.y / screenHeight < -0.35f && selectedHandIndex in cards.indices) {
+                                                val currentSelectedIndex = selectedHandIndex
+
+                                                if (
+                                                    dragOffset.value.y / screenHeight < -0.35f &&
+                                                    currentSelectedIndex != null &&
+                                                    currentSelectedIndex in cards.indices
+                                                ) {
                                                     Log.d(
                                                         "プレイ判定",
-                                                        "プレイ：${cards[selectedHandIndex].name}"
+                                                        "プレイ：${cards[currentSelectedIndex].name}"
                                                     )
-                                                    onCardPlayed(selectedHandIndex)
+                                                    onCardPlayed(currentSelectedIndex)
                                                 }
                                                 break
                                             }
@@ -185,19 +192,30 @@ fun PlayerHandArea(
                 }
 
             }
-            if (isDragging.value && selectedHandIndex in cards.indices) {
-                val draggedCard = cards[selectedHandIndex] // ← ここで新しい変数にすることで val の再代入エラーを回避
+            val draggingIndex = selectedHandIndex
+
+            if (
+                isDragging.value &&
+                draggingIndex != null &&
+                draggingIndex in cards.indices &&
+                draggingIndex in cardInfoList.indices
+            ) {
+                val draggedCard = cards[draggingIndex]
+                val draggedInfo = cardInfoList[draggingIndex]
+
                 val dragX = dragOffset.value.x.coerceIn(-2050f, screenWidth + 2050f)
                 val dragY = dragOffset.value.y.coerceIn(-2050f, screenHeight + 2050f)
-                val draggedInfo = cardInfoList[selectedHandIndex]
+
                 val yDeltaRatio = ((baseY - dragY).coerceAtLeast(0f) / screenHeight)
                 val correctionRatio = 0.55f
                 val xCorrection = draggedInfo.offsetX * yDeltaRatio * correctionRatio
+
                 val offset = IntOffset(
                     x = (dragX + draggedInfo.offsetX + xCorrection - cardWidthPx / 2).roundToInt(),
                     y = (dragY - dragStartOffsetY.value - cardHeightPx / 2).roundToInt()
                 )
-                key(selectedHandIndex) {
+
+                key(draggingIndex) {
                     Box(
                         modifier = Modifier
                             .offset { offset }
