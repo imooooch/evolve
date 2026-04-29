@@ -118,17 +118,17 @@ fun CardWithStats(
                 }
             }
         }
-
         if (showPower) {
             Text(
                 text = displayPower?.toString() ?: "",
                 color = Color.White,
                 fontSize = statFontSize,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = maxWidth * 0.02f, bottom = maxHeight * 0.01f)
-                    .background(powerBgColor, RoundedCornerShape(maxWidth * 0.04f))
-                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(maxWidth * 0.04f))
+                    .background(powerBgColor, RoundedCornerShape(cornerSize))
+                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(cornerSize))
                     .padding(
                         horizontal = statHorizontalPadding,
                         vertical = statVerticalPadding
