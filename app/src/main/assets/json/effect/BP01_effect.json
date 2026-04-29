@@ -1,0 +1,26 @@
+{
+  "card": "BP01-002",
+  "baseAbilities": ["Ward"],
+  "effects": [
+    {
+      "timing": "EvolveCost",
+      "cost": 1,
+      "type": "Evolve"
+    },
+    {
+      "timing": "Fanfare",
+      "optional": true,
+      "cost": {
+        "type": "ReturnOtherCardToHand",
+        "count": 1,
+        "target": "Other",
+        "zone": "Field"
+      },
+      "effect": {
+        "type": "BuffSelf",
+        "power": 1,
+        "hp": 1
+      }
+    }
+  ]
+}

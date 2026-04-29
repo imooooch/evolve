@@ -40,7 +40,10 @@ data class CardData(
     val baseCard: CardData? = null,
     var isEvolvedCard: Boolean = false,         // このカードが進化後であるか
     var originalCard: CardData? = null,         // 進化前のカードデータ
-    var isFaceUp: Boolean = false              // 表向きか（画像表示制御用）
+    var isFaceUp: Boolean = false,              // 表向きか（画像表示制御用）
+    val baseAbilities: List<AbilityType> = emptyList(),
+    val addedAbilities: List<AbilityType> = emptyList(),
+    val removedAbilities: List<AbilityType> = emptyList()
 )
 
 data class CardFilter(
