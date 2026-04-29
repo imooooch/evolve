@@ -23,27 +23,32 @@ fun CardWithStats(
     modifier: Modifier = Modifier,
     showAbilities: Boolean = true   // ← 追加
 ) {
-    val originalPower = card.originalCard?.power ?: card.power
-    val originalHp = card.originalCard?.hp ?: card.hp
+    val originalPower = card.power
+    val originalHp = card.hp
     val displayAbilities =
         (card.baseAbilities + card.addedAbilities)
             .filterNot { it in card.removedAbilities }
             .distinct()
     val mainColumn = displayAbilities.take(4)
     val extraColumn = displayAbilities.drop(4).take(4)
+
     val powerBgColor = when {
         card.power == null || originalPower == null -> Color(0xFF0D47A1)
-        card.power > originalPower -> Color(0xFF2E7D32) // 上昇
-        card.power < originalPower -> Color(0xFF6A1B9A) // 低下
+        card.power > originalPower -> Color(0xFF2E7D32) // 上昇　緑
+        card.power < originalPower -> Color(0xFF6A1B9A) // 低下　紫
         else -> Color(0xFF0D47A1)
     }
 
     val hpBgColor = when {
         card.hp == null || originalHp == null -> Color(0xFF8E0000)
-        card.hp < originalHp -> Color(0xFFD50000) // ダメージ
-        card.hp > originalHp -> Color(0xFF2E7D32) // 増加
+        card.hp > originalHp -> Color(0xFF2E7D32) // 増加　緑
+        card.hp < originalHp -> Color(0xFFD50000) // ダメージ　明るい赤
         else -> Color(0xFF8E0000)
     }
+
+    val isAmulet = card.kind.contains("アミュレット")
+    val showPower = !isAmulet || card.power != null
+    val showHp = !isAmulet || card.hp != null
 
     Box(modifier = modifier) {
         Image(
@@ -90,30 +95,34 @@ fun CardWithStats(
             }
         }
 
-        Text(
-            text = card.power?.toString() ?: "",
-            color = Color.White,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 2.dp, bottom = 1.dp)
-                .background(powerBgColor, shape = RoundedCornerShape(4.dp))
-                .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
-        )
+        if (showPower) {
+            Text(
+                text = card.power?.toString() ?: "",
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 2.dp, bottom = 1.dp)
+                    .background(powerBgColor, shape = RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            )
+        }
 
-        Text(
-            text = card.hp?.toString() ?: "",
-            color = Color.White,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 2.dp, bottom = 1.dp)
-                .background(hpBgColor, shape = RoundedCornerShape(4.dp))
-                .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
-        )
+        if (showHp) {
+            Text(
+                text = card.hp?.toString() ?: "",
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 2.dp, bottom = 1.dp)
+                    .background(hpBgColor, shape = RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            )
+        }
     }
 }
