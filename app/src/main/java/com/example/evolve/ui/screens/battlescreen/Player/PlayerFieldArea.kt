@@ -120,7 +120,8 @@ fun FieldCardSlot(
 
             CardWithStats(
                 card = card,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                showAbilities = true
             )
         }
     }

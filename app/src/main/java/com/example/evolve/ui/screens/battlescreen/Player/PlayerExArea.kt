@@ -16,9 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
-import com.example.evolve.ui.utils.loadCardImage
 import com.example.evolve.model.CardData
 import com.example.evolve.ui.screens.exAreaHeightRatio
 import com.example.evolve.ui.screens.exAreaWidthRatio
@@ -106,7 +103,8 @@ fun PlayerEXArea(
 
                 CardWithStats(
                     card = card,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    showAbilities = false
                 )
             }
         }

@@ -16,10 +16,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.evolve.model.CardData
 import com.example.evolve.ui.utils.loadCardImage
+
 @Composable
 fun CardWithStats(
     card: CardData,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showAbilities: Boolean = true   // ← 追加
 ) {
     val originalPower = card.originalCard?.power ?: card.power
     val originalHp = card.originalCard?.hp ?: card.hp
@@ -27,7 +29,8 @@ fun CardWithStats(
         (card.baseAbilities + card.addedAbilities)
             .filterNot { it in card.removedAbilities }
             .distinct()
-            .take(5)
+    val mainColumn = displayAbilities.take(4)
+    val extraColumn = displayAbilities.drop(4).take(4)
     val powerBgColor = when {
         card.power == null || originalPower == null -> Color(0xFF0D47A1)
         card.power > originalPower -> Color(0xFF2E7D32) // 上昇
@@ -50,19 +53,40 @@ fun CardWithStats(
             modifier = Modifier.fillMaxSize()
         )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = (-18).dp, y = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            displayAbilities.forEach { ability ->
-                Image(
-                    bitmap = loadCardImage("images/icon/${ability.iconFile}.png"),
-                    contentDescription = ability.displayName,
-                    modifier = Modifier.size(16.dp),
-                    contentScale = ContentScale.Fit
-                )
+        if (showAbilities) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = (-36).dp, y = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                if (extraColumn.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        extraColumn.forEach { ability ->
+                            Image(
+                                bitmap = loadCardImage("images/icon/${ability.iconFile}.png"),
+                                contentDescription = ability.displayName,
+                                modifier = Modifier.size(16.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    mainColumn.forEach { ability ->
+                        Image(
+                            bitmap = loadCardImage("images/icon/${ability.iconFile}.png"),
+                            contentDescription = ability.displayName,
+                            modifier = Modifier.size(16.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
             }
         }
 

@@ -1,6 +1,7 @@
-{
+[
+  {
   "card": "BP01-002",
-  "baseAbilities": ["Ward"],
+  "baseAbilities": ["Ward","Aura","Drain","Bane","Assail"],
   "effects": [
     {
       "timing": "EvolveCost",
@@ -24,3 +25,4 @@
     }
   ]
 }
+]
