@@ -23,8 +23,8 @@ fun CardWithStats(
     modifier: Modifier = Modifier,
     showAbilities: Boolean = true   // ← 追加
 ) {
-    val basePower = card.basePower ?: card.power
-    val baseHp = card.baseHp ?: card.hp
+    val basePower = card.basePower ?: card.originalCard?.power
+    val baseHp = card.baseHp ?: card.originalCard?.hp
 
     val displayPower = basePower?.let {
         it + card.powerModifier
