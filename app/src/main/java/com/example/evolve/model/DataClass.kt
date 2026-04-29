@@ -46,6 +46,18 @@ data class CardData(
     val removedAbilities: List<AbilityType> = emptyList()
 )
 
+enum class AbilityType(
+    val displayName: String,
+    val iconFile: String
+) {
+    Assail("指定攻撃", "Assail"),
+    Aura("オーラ", "Aura"),
+    Bane("必殺", "Bane"),
+    Drain("ドレイン", "Drain"),
+    Intimidate("威圧", "Intimidate"),
+    Ward("守護", "Ward")
+}
+
 data class CardFilter(
     val maxCost: Int? = null,
     val kindContains: String? = null

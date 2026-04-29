@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.evolve.model.CardData
 import com.example.evolve.ui.utils.loadCardImage
-
 @Composable
 fun CardWithStats(
     card: CardData,
@@ -24,7 +23,11 @@ fun CardWithStats(
 ) {
     val originalPower = card.originalCard?.power ?: card.power
     val originalHp = card.originalCard?.hp ?: card.hp
-
+    val displayAbilities =
+        (card.baseAbilities + card.addedAbilities)
+            .filterNot { it in card.removedAbilities }
+            .distinct()
+            .take(5)
     val powerBgColor = when {
         card.power == null || originalPower == null -> Color(0xFF0D47A1)
         card.power > originalPower -> Color(0xFF2E7D32) // 上昇
@@ -46,6 +49,22 @@ fun CardWithStats(
             contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize()
         )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = (-18).dp, y = 0.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            displayAbilities.forEach { ability ->
+                Image(
+                    bitmap = loadCardImage("images/icon/${ability.iconFile}.png"),
+                    contentDescription = ability.displayName,
+                    modifier = Modifier.size(16.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
 
         Text(
             text = card.power?.toString() ?: "",
