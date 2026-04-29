@@ -23,8 +23,16 @@ fun CardWithStats(
     modifier: Modifier = Modifier,
     showAbilities: Boolean = true   // ← 追加
 ) {
-    val originalPower = card.power
-    val originalHp = card.hp
+    val basePower = card.basePower ?: card.power
+    val baseHp = card.baseHp ?: card.hp
+
+    val displayPower = basePower?.let {
+        it + card.powerModifier
+    }
+
+    val displayHp = baseHp?.let {
+        it + card.hpModifier - card.damage
+    }
     val displayAbilities =
         (card.baseAbilities + card.addedAbilities)
             .filterNot { it in card.removedAbilities }
@@ -33,23 +41,32 @@ fun CardWithStats(
     val extraColumn = displayAbilities.drop(4).take(4)
 
     val powerBgColor = when {
-        card.power == null || originalPower == null -> Color(0xFF0D47A1)
-        card.power > originalPower -> Color(0xFF2E7D32) // 上昇　緑
-        card.power < originalPower -> Color(0xFF6A1B9A) // 低下　紫
+        displayPower == null || basePower == null -> Color(0xFF0D47A1)
+        displayPower > basePower -> Color(0xFF2E7D32) // 上昇
+        displayPower < basePower -> Color(0xFF6A1B9A) // 低下
         else -> Color(0xFF0D47A1)
     }
 
     val hpBgColor = when {
-        card.hp == null || originalHp == null -> Color(0xFF8E0000)
-        card.hp > originalHp -> Color(0xFF2E7D32) // 増加　緑
-        card.hp < originalHp -> Color(0xFFD50000) // ダメージ　明るい赤
+        displayHp == null || baseHp == null -> Color(0xFF8E0000)
+        displayHp < baseHp -> Color(0xFFD50000) // ダメージ/低下
+        displayHp > baseHp -> Color(0xFF2E7D32) // 増加
         else -> Color(0xFF8E0000)
     }
 
     val isAmulet = card.kind.contains("アミュレット")
-    val showPower = !isAmulet || card.power != null
-    val showHp = !isAmulet || card.hp != null
 
+    val showPower = if (isAmulet) {
+        displayPower != null && displayPower != 0
+    } else {
+        displayPower != null
+    }
+
+    val showHp = if (isAmulet) {
+        displayHp != null && displayHp != 0
+    } else {
+        displayHp != null
+    }
     Box(modifier = modifier) {
         Image(
             bitmap = loadCardImage("images/${card.expansion}/${card.image}"),
@@ -97,7 +114,7 @@ fun CardWithStats(
 
         if (showPower) {
             Text(
-                text = card.power?.toString() ?: "",
+                text = displayPower?.toString() ?: "",
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -112,7 +129,7 @@ fun CardWithStats(
 
         if (showHp) {
             Text(
-                text = card.hp?.toString() ?: "",
+                text = displayHp?.toString() ?: "",
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,

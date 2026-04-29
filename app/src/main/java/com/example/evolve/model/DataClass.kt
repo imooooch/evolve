@@ -43,7 +43,12 @@ data class CardData(
     var isFaceUp: Boolean = false,              // 表向きか（画像表示制御用）
     val baseAbilities: List<AbilityType> = emptyList(),
     val addedAbilities: List<AbilityType> = emptyList(),
-    val removedAbilities: List<AbilityType> = emptyList()
+    val removedAbilities: List<AbilityType> = emptyList(),
+    val basePower: Int? = null,
+    val baseHp: Int? = null,
+    val damage: Int = 0,
+    val powerModifier: Int = 0,
+    val hpModifier: Int = 0
 )
 
 enum class AbilityType(
