@@ -23,8 +23,8 @@ fun CardWithStats(
     modifier: Modifier = Modifier,
     showAbilities: Boolean = true   // ← 追加
 ) {
-    val basePower = card.basePower ?: card.originalCard?.power
-    val baseHp = card.baseHp ?: card.originalCard?.hp
+    val basePower = card.basePower ?: card.originalCard?.power ?: card.power
+    val baseHp = card.baseHp ?: card.originalCard?.hp ?: card.hp
 
     val displayPower = basePower?.let {
         it + card.powerModifier
@@ -67,7 +67,13 @@ fun CardWithStats(
     } else {
         displayHp != null
     }
-    Box(modifier = modifier) {
+    BoxWithConstraints(modifier = modifier) {
+        val iconSize = maxWidth * 0.32f
+        val statFontSize = (maxWidth.value * 0.32f).sp
+        val cornerSize = maxWidth * 0.09f
+        val statHorizontalPadding = maxWidth * 0.12f
+        val statVerticalPadding = maxHeight * 0.03f
+        val iconOffsetX = -(iconSize * 2.2f)
         Image(
             bitmap = loadCardImage("images/${card.expansion}/${card.image}"),
             contentDescription = card.name,
@@ -75,12 +81,13 @@ fun CardWithStats(
             modifier = Modifier.fillMaxSize()
         )
 
+
         if (showAbilities) {
             Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .offset(x = (-36).dp, y = 0.dp),
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    .offset(x = iconOffsetX, y = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(iconSize * 0.12f)
             ) {
                 if (extraColumn.isNotEmpty()) {
                     Column(
@@ -90,7 +97,7 @@ fun CardWithStats(
                             Image(
                                 bitmap = loadCardImage("images/icon/${ability.iconFile}.png"),
                                 contentDescription = ability.displayName,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(iconSize),
                                 contentScale = ContentScale.Fit
                             )
                         }
@@ -104,7 +111,7 @@ fun CardWithStats(
                         Image(
                             bitmap = loadCardImage("images/icon/${ability.iconFile}.png"),
                             contentDescription = ability.displayName,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(iconSize),
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -116,14 +123,16 @@ fun CardWithStats(
             Text(
                 text = displayPower?.toString() ?: "",
                 color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = statFontSize,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 2.dp, bottom = 1.dp)
-                    .background(powerBgColor, shape = RoundedCornerShape(4.dp))
-                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .padding(start = maxWidth * 0.02f, bottom = maxHeight * 0.01f)
+                    .background(powerBgColor, RoundedCornerShape(maxWidth * 0.04f))
+                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(maxWidth * 0.04f))
+                    .padding(
+                        horizontal = statHorizontalPadding,
+                        vertical = statVerticalPadding
+                    )
             )
         }
 
@@ -131,14 +140,17 @@ fun CardWithStats(
             Text(
                 text = displayHp?.toString() ?: "",
                 color = Color.White,
-                fontSize = 13.sp,
+                fontSize = statFontSize,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 2.dp, bottom = 1.dp)
-                    .background(hpBgColor, shape = RoundedCornerShape(4.dp))
-                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .padding(end = maxWidth * 0.02f, bottom = maxHeight * 0.01f)
+                    .background(hpBgColor, RoundedCornerShape(cornerSize))
+                    .border(1.dp, Color(0xFF46484A), RoundedCornerShape(cornerSize))
+                    .padding(
+                        horizontal = statHorizontalPadding,
+                        vertical = statVerticalPadding
+                    )
             )
         }
     }
