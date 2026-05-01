@@ -35,7 +35,6 @@ data class CardData(
     val image: String?,
     var count: Int,
     val isActed: Boolean = false,
-    val act: Boolean = false,
     val isEvolved: Boolean = false,
     val baseCard: CardData? = null,
     var isEvolvedCard: Boolean = false,         // このカードが進化後であるか

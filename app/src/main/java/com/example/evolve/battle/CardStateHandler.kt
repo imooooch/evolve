@@ -1,7 +1,7 @@
 package com.example.evolve.battle
 
 class CardStateHandler {
-    fun rotateFieldCardRight(
+    fun actFieldCard(
         state: BattleState,
         index: Int
     ): BattleState {

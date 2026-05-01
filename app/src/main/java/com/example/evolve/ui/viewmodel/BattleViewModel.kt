@@ -151,10 +151,10 @@ class BattleViewModel(
         selectionController.clearSelectedCardIndex()
     }
 
-    fun rotateFieldCardRight(index: Int) {
+    fun actFieldCard(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-            cardStateHandler.rotateFieldCardRight(state, index)
+            cardStateHandler.actFieldCard(state, index)
         }
     }
 
