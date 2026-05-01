@@ -67,7 +67,7 @@ class TestEffectViewModel : ViewModel() {
             advance = null,
             image = null,
             count = 1,
-            rotation = 0f
+            isActed = false
         )
 
         val player = PlayerState(name = "Player").apply {

@@ -6,8 +6,7 @@ class CardMovementHandler {
 
     fun resetCardState(card: CardData): CardData {
         return card.copy(
-            act = false,
-            rotation = 0f,
+            isActed = false,
             isEvolved = false,
             originalCard = null
         )

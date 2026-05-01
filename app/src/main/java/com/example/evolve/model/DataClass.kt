@@ -34,7 +34,7 @@ data class CardData(
     val advance: String?,
     val image: String?,
     var count: Int,
-    val rotation: Float?,
+    val isActed: Boolean = false,
     val act: Boolean = false,
     val isEvolved: Boolean = false,
     val baseCard: CardData? = null,

@@ -96,7 +96,7 @@ fun loadAndRefreshDeck(context: Context, deckName: String): Deck? {
                 advance = card.advance ?: "",
                 image = card.image,
                 count = deckCard.count,
-                rotation = 0f
+                isActed = false
             )
         }
     }

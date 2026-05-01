@@ -92,7 +92,7 @@ fun updateTempDeck(context: Context, cardCounts: Map<String, Int>, deckCards: Li
                         advance = card.advance ?: "",
                         image = card.image,
                         count = count,
-                        rotation = 0f
+                        isActed = false
                     ))
                 }
             }

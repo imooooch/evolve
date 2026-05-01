@@ -51,7 +51,8 @@ fun FieldCardSlot(
     onClickCard: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
-
+    val isActed = currentCard?.isActed == true
+    val actOffsetY = (cardHeight - cardWidth) / 2
     fun logFieldCardInfo(card: CardData?) {
         if (card == null) {
             Log.d("FieldCardCheck", "カードなし")
@@ -78,18 +79,19 @@ fun FieldCardSlot(
     }
     Box(
         modifier = Modifier
-
             .size(cardWidth, cardHeight)
-            .graphicsLayer { rotationZ = currentCard?.rotation ?: 0f }
+            .offset(y = if (isActed) actOffsetY else 0.dp)
+            .graphicsLayer {
+                rotationZ = if (isActed) 90f else 0f
+            }
             .combinedClickable(
-                        onClick = {
+                onClick = {
                     coroutineScope.launch {
                         viewModel.clearImageAndMenu()
                         onClickCard()
 
                         if (currentCard != null) {
                             logFieldCardInfo(currentCard)
-
                             Log.d("クリック", "PlayerFieldArea ${index + 1}番 クリック：${currentCard.name}")
                             viewModel.showImageFromCard(currentCard)
                         }
@@ -98,7 +100,6 @@ fun FieldCardSlot(
                 onLongClick = {
                     if (currentCard != null) {
                         logFieldCardInfo(currentCard)
-
                         viewModel.highlightFieldCard(index)
                         Log.d("長押し", "PlayerFieldArea 長押し：${currentCard.name}")
                         viewModel.showImageFromCard(currentCard)
@@ -173,7 +174,7 @@ fun PlayerFieldArea(
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing + 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)) {
@@ -222,7 +223,6 @@ fun PlayerFieldArea(
 
                                     when (label) {
                                         "1Attack" -> {
-                                            viewModel.rotateFieldCardRight(fixedIndex)
                                             viewModel.setFieldCardAct(fixedIndex, true)
                                         }
 

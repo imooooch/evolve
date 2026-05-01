@@ -162,7 +162,7 @@
             )
             OpponentFieldArea(
                 modifier = Modifier
-                    .offset(y = with(density) { (screenHeight * 0.308f).toDp() })
+                    .offset(y = with(density) { (screenHeight * 0.298f).toDp() })
                     .align(Alignment.TopCenter),
                 screenWidth = screenWidth,
                 screenHeight = screenHeight
@@ -311,7 +311,7 @@
             )
             PlayerFieldArea(
                 modifier = Modifier
-                    .offset(y = with(density) { (screenHeight * 0.495f).toDp() })
+                    .offset(y = with(density) { (screenHeight * 0.505f).toDp() })
                     .align(Alignment.TopCenter),
                 screenWidth = screenWidth,
                 screenHeight = screenHeight,

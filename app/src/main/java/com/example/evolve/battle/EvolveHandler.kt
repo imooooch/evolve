@@ -32,8 +32,7 @@ class EvolveHandler {
             isEvolved = true,
             originalCard = originalBaseCard,
             isFaceUp = true,
-            act = baseCard.act,
-            rotation = baseCard.rotation
+            isActed = baseCard.isActed
         )
 
         val newField = player.field.toMutableList().apply {
