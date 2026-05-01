@@ -11,6 +11,7 @@ import com.example.evolve.model.AbilityType
 import com.example.evolve.model.CardData
 import kotlinx.serialization.json.jsonArray
 
+
 object CardEffectLoader {
 
     fun loadEffectsForCard(context: Context, cardId: String, expansion: String): List<CardEffect> {

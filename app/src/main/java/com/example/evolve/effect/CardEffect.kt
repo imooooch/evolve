@@ -1,5 +1,7 @@
 package com.example.evolve.effect
 
+
+
 // 効果の発動タイミングを定義
 enum class EffectTiming {
     Passive,       // 永続効果
@@ -17,10 +19,27 @@ enum class EffectTiming {
 
 // カード効果の基底 sealed class
 sealed class CardEffect {
-abstract val timing: EffectTiming
+    abstract val timing: EffectTiming
 
-data class FollowerSelect(val count: Int, override val timing: EffectTiming) : CardEffect()
-data class Damage(val amount: Int, override val timing: EffectTiming) : CardEffect()
-data class Draw(val count: Int, override val timing: EffectTiming) : CardEffect()
+    data class FollowerSelect(
+        val count: Int,
+        override val timing: EffectTiming
+    ) : CardEffect()
+
+    data class Damage(
+        val amount: Int,
+        override val timing: EffectTiming
+    ) : CardEffect()
+
+    data class Draw(
+        val count: Int,
+        override val timing: EffectTiming
+    ) : CardEffect()
+
+    data class AddCounterEffect(
+        val amount: Int,
+        override val timing: EffectTiming
+    ) : CardEffect()
 // 今後の拡張: Heal, Boost, Summon, Buff など
 }
+

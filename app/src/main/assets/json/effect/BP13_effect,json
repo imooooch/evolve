@@ -1,0 +1,12 @@
+[
+  {
+  "card": "BP13-037",
+    "effects": [
+      {
+        "type": "AddCounter",
+        "amount": 1,
+        "timing": "OnEndPhase"
+      }
+    ]
+  }
+]
