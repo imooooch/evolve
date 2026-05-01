@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,13 +68,19 @@ fun CardWithStats(
     } else {
         displayHp != null
     }
+
+
+
     BoxWithConstraints(modifier = modifier) {
-        val iconSize = maxWidth * 0.32f
+        val iconSize = maxWidth * 0.28f
         val statFontSize = (maxWidth.value * 0.32f).sp
         val cornerSize = maxWidth * 0.09f
         val statHorizontalPadding = maxWidth * 0.12f
         val statVerticalPadding = maxHeight * 0.03f
         val iconOffsetX = -(iconSize * 2.2f)
+        val showCounter = card.counter != null
+        val counterSize = maxWidth * 0.28f
+        val counterFontSize = (maxWidth.value * 0.20f).sp
         Image(
             bitmap = loadCardImage("images/${card.expansion}/${card.image}"),
             contentDescription = card.name,
@@ -81,7 +88,27 @@ fun CardWithStats(
             modifier = Modifier.fillMaxSize()
         )
 
-
+        if (showCounter) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = maxHeight * 0.02f, end = maxWidth * 0.02f)
+                    .size(counterSize)
+                    .background(
+                        color = Color(0xFF2E7D32),
+                        shape = CircleShape
+                    )
+                    .border(1.dp, Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = card.counter.toString(),
+                    color = Color.White,
+                    fontSize = counterFontSize,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
         if (showAbilities) {
             Row(
                 modifier = Modifier

@@ -48,7 +48,8 @@ data class CardData(
     val baseHp: Int? = null,
     val damage: Int = 0,
     val powerModifier: Int = 0,
-    val hpModifier: Int = 0
+    val hpModifier: Int = 0,
+    var counter: Int? = null
 )
 
 enum class AbilityType(
