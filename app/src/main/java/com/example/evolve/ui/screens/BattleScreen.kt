@@ -30,11 +30,13 @@
     import androidx.compose.ui.zIndex
     import com.example.evolve.ui.viewmodel.BattleViewModel
     import androidx.lifecycle.viewmodel.compose.viewModel
+    import com.example.evolve.battle.ViewSide
     import com.example.evolve.ui.components.SingleClickButton
     import com.example.evolve.model.CardData
     import com.example.evolve.ui.utils.loadCardImage
     import com.example.evolve.ui.screens.battlescreen.Player.*
     import com.example.evolve.ui.screens.battlescreen.Opponent.*
+    import com.example.evolve.ui.components.CardWithStats
 
     val exAreaWidthRatio = 0.65f // EXエリア全体の幅
     val exAreaHeightRatio = 0.08f // EXエリアの高さ
@@ -69,7 +71,6 @@
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize()
         ) {
-            val viewModel: BattleViewModel = viewModel()
             val screenWidth = constraints.maxWidth.toFloat()
             val screenHeight = constraints.maxHeight.toFloat()
             val density = LocalDensity.current
@@ -79,33 +80,63 @@
             val textBoxHeightRatio = 0.035f
             val CountWidthRatio = 0.12f
             val CountHeightRatio = 0.025f
+
             val battleState by viewModel.battleState.collectAsState()
-            val playerEpCount = battleState?.player1?.ep ?: 0
-            val opponentEpCount = battleState?.player2?.ep ?: 0
-            val playerHand = battleState?.player1?.hand ?: emptyList()
-            val opponentHand = battleState?.player2?.hand ?: emptyList()
-            val playerLeaderHp = battleState?.player1?.leaderHp ?: 0
-            val opponentLeaderHp = battleState?.player2?.leaderHp ?: 0
-            val playerCurrentPP = battleState?.player1?.currentPP ?: 0
-            val playerMaxPP = battleState?.player1?.maxPP ?: 0
-            val opponentCurrentPP = battleState?.player2?.currentPP ?: 0
-            val opponentMaxPP = battleState?.player2?.maxPP ?: 0
-            val playerDeckCount = battleState?.player1?.deck?.size ?: 0
-            val playerBanishCount = battleState?.player1?.banished?.size ?: 0
-            val playerGraveyardCount = battleState?.player1?.graveyard?.size ?: 0
-            val playerEvolveDeckCount = battleState?.player1?.evolveDeck?.size ?: 0
-            val opponentDeckCount = battleState?.player2?.deck?.size ?: 0
-            val opponentBanishCount = battleState?.player2?.banished?.size ?: 0
-            val opponentGraveyardCount = battleState?.player2?.graveyard?.size ?: 0
-            val opponentEvolveDeckCount = battleState?.player2?.evolveDeck?.size ?: 0
-            val isEvolveDeckOccupied = battleState?.player1?.evolveDeck?.isNotEmpty() == true
-            val isGraveyardOccupied = battleState?.player1?.graveyard?.isNotEmpty() == true
-            val isBanishOccupied = battleState?.player1?.banished?.isNotEmpty() == true
+            val viewSide by viewModel.viewSide.collectAsState()
+            val viewMode by viewModel.viewMode.collectAsState()
+            val state = battleState ?: return@BoxWithConstraints
+
+            val bottomPlayer = when (viewSide) {
+                ViewSide.Player1 -> state.player1
+                ViewSide.Player2 -> state.player2
+            }
+
+            val topPlayer = when (viewSide) {
+                ViewSide.Player1 -> state.player2
+                ViewSide.Player2 -> state.player1
+            }
+            val playerEpCount = bottomPlayer.ep
+            val opponentEpCount = topPlayer.ep
+
+            val playerHand = bottomPlayer.hand
+            val opponentHand = topPlayer.hand
+
+            val playerLeaderHp = bottomPlayer.leaderHp
+            val opponentLeaderHp = topPlayer.leaderHp
+
+            val playerCurrentPP = bottomPlayer.currentPP
+            val playerMaxPP = bottomPlayer.maxPP
+            val opponentCurrentPP = topPlayer.currentPP
+            val opponentMaxPP = topPlayer.maxPP
+
+            val playerDeckCount = bottomPlayer.deck.size
+            val opponentDeckCount = topPlayer.deck.size
+
+            val playerBanishCount = bottomPlayer.banished.size
+            val opponentBanishCount = topPlayer.banished.size
+
+            val playerGraveyardCount = bottomPlayer.graveyard.size
+            val opponentGraveyardCount = topPlayer.graveyard.size
+
+            val playerEvolveDeckCount = bottomPlayer.evolveDeck.size
+            val opponentEvolveDeckCount = topPlayer.evolveDeck.size
+
+            val isEvolveDeckOccupied = bottomPlayer.evolveDeck.isNotEmpty()
+            val isOpponentEvolveDeckOccupied = topPlayer.evolveDeck.isNotEmpty()
+
+            val isGraveyardOccupied = bottomPlayer.graveyard.isNotEmpty()
+            val isOpponentGraveyardOccupied = topPlayer.graveyard.isNotEmpty()
+
+            val isBanishOccupied = bottomPlayer.banished.isNotEmpty()
+            val isOpponentBanishOccupied = topPlayer.banished.isNotEmpty()
+
+            val graveyardCards = bottomPlayer.graveyard
+            val evolveCards = bottomPlayer.evolveDeck
+            val banishCards = bottomPlayer.banish
+
             val isLeaderOccupied = true // 表示用trueで可
-            val isOpponentEvolveDeckOccupied = battleState?.player2?.evolveDeck?.isNotEmpty() == true
-            val isOpponentGraveyardOccupied = battleState?.player2?.graveyard?.isNotEmpty() == true
-            val isOpponentBanishOccupied = battleState?.player2?.banished?.isNotEmpty() == true
             val isOpponentLeaderOccupied = true
+
             val playerHandCards = remember { mutableStateListOf<CardData>() }
             val deckBackBitmap = remember {
                 val inputStream = context.assets.open("images/battle/Back.jpg")
@@ -113,12 +144,11 @@
             }
             val selectedImagePath by viewModel.selectedImagePath.collectAsState()
             val selectedHandIndex by viewModel.selectedHandIndex.collectAsState()
-            val graveyardCards = battleState?.player1?.graveyard ?: emptyList()
             val lastCard = graveyardCards.lastOrNull()
-            val evolveDeck = battleState?.player1?.evolveDeck?: emptyList()
-            val evolveCards = battleState?.player1?.evolveDeck?: emptyList()
-            val banishCards = battleState?.player1?.banish?: emptyList()
             val lastBanishCard = banishCards.lastOrNull()
+
+
+
 
             // ✅ 共有画像表示エリア（他機能でも利用可能）
             Image(
@@ -165,7 +195,8 @@
                     .offset(y = with(density) { (screenHeight * 0.298f).toDp() })
                     .align(Alignment.TopCenter),
                 screenWidth = screenWidth,
-                screenHeight = screenHeight
+                screenHeight = screenHeight,
+                fieldCards = topPlayer.field // ← 追加
             )
             OpponentGraveyardArea(
                 modifier = Modifier
@@ -315,7 +346,7 @@
                     .align(Alignment.TopCenter),
                 screenWidth = screenWidth,
                 screenHeight = screenHeight,
-                fieldCards = viewModel.battleState.value?.player1?.field ?: emptyList(),
+                fieldCards = bottomPlayer.field,
                 viewModel = viewModel // ✅ 忘れずに渡す
             )
             PlayerEvolveDeckArea(
@@ -368,7 +399,7 @@
                 modifier = Modifier
                     .offset(y = with(density) { (screenHeight * 0.699f).toDp() })
                     .align(Alignment.TopCenter),
-                exCards = viewModel.battleState.value?.player1?.exArea ?: emptyList(),
+                exCards = bottomPlayer.exArea,
             )
 
             PlayerBanishArea(
@@ -461,317 +492,29 @@
                     .align(Alignment.BottomCenter)
                     .background(Color(0xFF4E2C2E))
             ) {
-                // ✅ ターン終了ボタン
-                SingleClickButton(
-                    onClick = {
-                        viewModel.endTurn()
-                    },
-                    modifier = Modifier
-                        .align(Alignment.Center)
+                Row(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("ターン終了")
-                }
-            }
-        }
-    }
-
-
-
-
-
-    @Composable
-    fun OpponentGraveyardArea(modifier: Modifier = Modifier, hasCard: Boolean) {
-        val graveyardBitmap = loadBackgroundImage("images/battle/Graveyard.png")
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f)
-        ) {
-            Image(
-                bitmap = graveyardBitmap,
-                contentDescription = "Opponent Graveyard Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-            if (hasCard) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    // カード表示処理
-                }
-            }
-        }
-    }
-    @Composable
-    fun OpponentBanishArea(modifier: Modifier = Modifier, hasCard: Boolean) {
-        val banishBitmap = loadBackgroundImage("images/battle/Banished.png")
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f)
-        ) {
-            Image(
-                bitmap = banishBitmap,
-                contentDescription = "Opponent Banish Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-            if (hasCard) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                }
-            }
-        }
-    }
-    @Composable
-    fun OpponentDeckArea(modifier: Modifier = Modifier, count: Int) {
-        val deckBackBitmap = loadBackgroundImage("images/battle/Back.jpg")
-        val deckBitmap = loadBackgroundImage("images/battle/Deck.png")
-
-        Box(modifier = modifier.graphicsLayer(rotationZ = 180f)) {
-            Image(
-                bitmap = if (count > 0) deckBackBitmap else deckBitmap,
-                contentDescription = "Opponent Deck Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-        }
-    }
-    @Composable
-    fun OpponentEvolveDeckArea(modifier: Modifier = Modifier, hasCard: Boolean) {
-        val evolveBitmap = loadBackgroundImage("images/battle/Evolve.png")
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f)
-        ) {
-            Image(
-                bitmap = evolveBitmap,
-                contentDescription = "Opponent Evolve Deck Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-            if (hasCard) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    // カード表示処理
-                }
-            }
-        }
-    }
-    @Composable
-    fun OpponentLeaderArea(modifier: Modifier = Modifier, hasCard: Boolean) {
-        val leaderBitmap = loadBackgroundImage("images/battle/Leader.png")
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f)
-        ) {
-            Image(
-                bitmap = leaderBitmap,
-                contentDescription = "Opponent Leader Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-            if (hasCard) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    // カード表示処理
-                }
-            }
-        }
-    }
-    @Composable
-    fun PlayerDeckArea(modifier: Modifier = Modifier, count: Int) {
-        val deckBackBitmap = loadBackgroundImage("images/battle/Back.jpg")
-        val deckBitmap = loadBackgroundImage("images/battle/Deck.png")
-        Box(modifier = modifier) {
-            Image(
-                bitmap = if (count > 0) deckBackBitmap else deckBitmap,
-                contentDescription = "Player Deck Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-        }
-    }
-
-
-    @Composable
-    fun PlayerLeaderArea(modifier: Modifier = Modifier, hasCard: Boolean) {
-        val leaderBitmap = loadBackgroundImage("images/battle/Leader.png")
-        Box(modifier = modifier) {
-            Image(
-                bitmap = leaderBitmap,
-                contentDescription = "Leader Background",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
-            )
-            if (hasCard) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    // カード表示処理
-                }
-            }
-        }
-    }
-    @Composable
-    fun OpponentEXArea(
-        modifier: Modifier = Modifier,
-        exCardCount: Int = 5
-    ) {
-        val screenWidth = LocalDensity.current.run { LocalConfiguration.current.screenWidthDp.dp.toPx() }
-        val screenHeight = LocalDensity.current.run { LocalConfiguration.current.screenHeightDp.dp.toPx() }
-        val density = LocalDensity.current
-        val exCardWidth = with(density) { (screenWidth * exCardWidthRatio).toDp() }
-        val exCardHeight = with(density) { (screenHeight * exAreaHeightRatio).toDp() }
-        val exCardSpacing = with(density) { (screenWidth * exCardSpacingRatio).toDp() }
-
-        Row(
-            modifier = modifier
-                .fillMaxWidth(exAreaWidthRatio)
-                .height(exCardHeight)
-                .graphicsLayer(rotationZ = 180f),
-            horizontalArrangement = Arrangement.spacedBy(exCardSpacing)
-        ) {
-            repeat(exCardCount) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(exCardWidth, exCardHeight)
-                        .background(Color.Magenta.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                }
-            }
-        }
-    }
-    @Composable
-    fun OpponentFieldArea(
-        modifier: Modifier = Modifier,
-        screenWidth: Float,
-        screenHeight: Float
-    ) {
-        val density = LocalDensity.current
-        val cardWidth = with(density) { (screenWidth * cardWidthRatio).toDp() }
-        val cardHeight = with(density) { (screenHeight * cardHeightRatio).toDp() }
-        val horizontalSpacing = with(density) { (screenWidth * horizontalSpacingRatio).toDp() }
-        val verticalSpacing = with(density) { (screenHeight * verticalSpacingRatio).toDp() }
-        Column(
-            modifier = modifier
-                .graphicsLayer(rotationZ = 180f),
-            verticalArrangement = Arrangement.spacedBy(verticalSpacing),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) { // 上段 1,2,3
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
-            ) {
-                repeat(3) { index ->
-                    Box(
-                        modifier = Modifier
-                            .size(cardWidth, cardHeight)
-                            .background(Color.White.copy(alpha = 0.5f)),
-                        contentAlignment = Alignment.Center
-                    ) { //text
-                    }
-                }
-            } // 下段 4,5
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
-            ) {
-                repeat(2) { index ->
-                    Box(
-                        modifier = Modifier
-                            .size(cardWidth, cardHeight)
-                            .background(Color.LightGray.copy(alpha = 0.5f)),
-                        contentAlignment = Alignment.Center
+                    SingleClickButton(
+                        onClick = {
+                            viewModel.toggleViewSide()
+                            viewModel.clearImageAndMenu()
+                        }
                     ) {
-                        //text
+                        Text("視点切替")
+                    }
+
+                    SingleClickButton(
+                        onClick = {
+                            viewModel.endTurn()
+                        }
+                    ) {
+                        Text("ターン終了")
                     }
                 }
             }
-        }
-    }
-    @Composable
-    fun OpponentHealthArea(modifier: Modifier = Modifier, health: Int = 20) {
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f), // 追加
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$health",
-                color = Color.Black,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-    @Composable
-    fun PlayerHealthArea(modifier: Modifier = Modifier, health: Int = 20) {
-        Box(
-            modifier = modifier,
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$health",
-                color = Color.Black,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-    @Composable
-    fun OpponentPPStatusArea(
-        modifier: Modifier = Modifier,
-        currentPP: Int,
-        maxPP: Int
-    ) {
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f), // 追加
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$currentPP / $maxPP",
-                color = Color.Black,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-    @Composable
-    fun PlayerPPStatusArea(
-        modifier: Modifier = Modifier,
-        currentPP: Int,
-        maxPP: Int
-    ) {
-        Box(
-            modifier = modifier,
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$currentPP / $maxPP",
-                color = Color.Black,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-    @Composable
-    fun OpponentGraveyardCountArea(modifier: Modifier = Modifier, count: Int) {
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f), // 追加
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$count",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-    @Composable
-    fun OpponentBanishCountArea(modifier: Modifier = Modifier, count: Int) {
-        Box(
-            modifier = modifier.graphicsLayer(rotationZ = 180f),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$count",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
         }
     }
 
