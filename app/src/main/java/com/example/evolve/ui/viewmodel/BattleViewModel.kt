@@ -23,7 +23,9 @@ import com.example.evolve.battle.CardPlayHandler
 import com.example.evolve.battle.CardStateHandler
 import com.example.evolve.battle.DeckLoader
 import com.example.evolve.battle.EvolveHandler
-
+import com.example.evolve.battle.BattleViewMode
+import com.example.evolve.battle.ViewSide
+import kotlinx.coroutines.flow.asStateFlow
 
 class BattleViewModel(
     private val savedStateHandle: SavedStateHandle
@@ -50,6 +52,30 @@ class BattleViewModel(
     val highlightCardIndex = selectionController.highlightCardIndex
     val highlightFieldCardIndex = selectionController.highlightFieldCardIndex
     val highlightExCardIndex = selectionController.highlightExCardIndex
+
+    private val _viewSide = MutableStateFlow(ViewSide.Player1)
+    val viewSide = _viewSide.asStateFlow()
+
+    private val _viewMode = MutableStateFlow(BattleViewMode.Versus)
+    val viewMode = _viewMode.asStateFlow()
+
+    fun toggleViewSide() {
+        _viewSide.value =
+            if (_viewSide.value == ViewSide.Player1) {
+                ViewSide.Player2
+            } else {
+                ViewSide.Player1
+            }
+    }
+
+    fun toggleViewMode() {
+        _viewMode.value =
+            if (_viewMode.value == BattleViewMode.Versus) {
+                BattleViewMode.Debug
+            } else {
+                BattleViewMode.Versus
+            }
+    }
 
     fun showImage(path: String) {
         uiStateController.showImage(path)
