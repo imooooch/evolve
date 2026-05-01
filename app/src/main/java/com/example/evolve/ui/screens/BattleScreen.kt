@@ -22,6 +22,7 @@
     import androidx.compose.ui.text.style.TextAlign
     import androidx.compose.animation.AnimatedVisibility
     import androidx.compose.foundation.gestures.detectTapGestures
+    import androidx.compose.foundation.interaction.MutableInteractionSource
     import androidx.compose.material3.Button
     import androidx.compose.material3.ButtonDefaults
     import androidx.compose.runtime.*
@@ -151,7 +152,7 @@
             val lastBanishCard = banishCards.lastOrNull()
 
             val imageDisplaySide by viewModel.imageDisplaySide.collectAsState()
-
+            val interactionSource = remember { MutableInteractionSource() }
 
             // ✅ 共有画像表示エリア（他機能でも利用可能）
 // 背景
@@ -494,6 +495,7 @@
                                 viewModel.clearImageAndMenu()
                             },
                             shape = RectangleShape,
+                            interactionSource = interactionSource, // ←追加
                             modifier = Modifier
                                 .size(400.dp)
                                 .align(
