@@ -5,7 +5,7 @@
       {
         "type": "AddCounter",
         "amount": 1,
-        "timing": "OnEndPhase"
+        "trigger": "OnEndPhase"
       }
     ]
   }

@@ -12,7 +12,9 @@ data class CardEffectData(
 
 @Serializable
 data class EffectEntry(
-    val timing: String? = null,
+    val trigger: String? = null,
     val type: String? = null,
+    val amount: Int? = null,
+    val count: Int? = null,
     val optional: Boolean = false
 )

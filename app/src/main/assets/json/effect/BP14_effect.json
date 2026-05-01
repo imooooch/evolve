@@ -1,13 +1,13 @@
 {
   "BP14-001": [
-    { "type": "FollowerSelect", "value": 1, "timing": "Triggered" },
-    { "type": "Damage", "value": 4, "timing": "Triggered" },
-    { "type": "Draw", "value": 1, "timing": "Triggered" },
-    { "type": "Draw", "value": 1, "timing": "OnAttack" }
+    { "type": "FollowerSelect", "value": 1, "trigger": "Triggered" },
+    { "type": "Damage", "value": 4, "trigger": "Triggered" },
+    { "type": "Draw", "value": 1, "trigger": "Triggered" },
+    { "type": "Draw", "value": 1, "trigger": "OnAttack" }
   ],
   "BP14-003": [
-    { "type": "FollowerSelect", "value": 1, "timing": "Triggered" },
-    { "type": "Damage", "value": 4, "timing": "Triggered" },
-    { "type": "Draw", "value": 1, "timing": "Triggered" }
+    { "type": "FollowerSelect", "value": 1, "trigger": "Triggered" },
+    { "type": "Damage", "value": 4, "trigger": "Triggered" },
+    { "type": "Draw", "value": 1, "trigger": "Triggered" }
   ]
 }

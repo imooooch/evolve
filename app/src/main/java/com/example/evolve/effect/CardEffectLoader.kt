@@ -9,7 +9,6 @@ import com.example.evolve.effect.CardEffect.*
 import kotlinx.serialization.json.contentOrNull
 import com.example.evolve.model.AbilityType
 import com.example.evolve.model.CardData
-import kotlinx.serialization.json.jsonArray
 
 
 object CardEffectLoader {
@@ -36,15 +35,34 @@ object CardEffectLoader {
                 val obj = entry.jsonObject
                 val type = obj["type"]?.jsonPrimitive?.content ?: continue
                 val value = obj["value"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 0
-                val timingStr = obj["timing"]?.jsonPrimitive?.content ?: "Triggered"
-                val timing = EffectTiming.valueOf(timingStr)
+                val triggerStr = obj["trigger"]?.jsonPrimitive?.content ?: "Triggered"
+                val entryTrigger = EffectTrigger.valueOf(triggerStr)
 
-                if (trigger != null && timing.name != trigger.name) continue
+                if (trigger != null && entryTrigger != trigger) continue
 
                 val effect = when (type) {
-                    "FollowerSelect" -> FollowerSelect(value, timing)
-                    "Damage" -> Damage(value, timing)
-                    "Draw" -> Draw(value, timing)
+                    "FollowerSelect" -> FollowerSelect(
+                        count = value ?: 1,
+                        trigger = entryTrigger
+                    )
+
+                    "Damage" -> Damage(
+                        amount = value ?: 0,
+                        trigger = entryTrigger
+                    )
+
+                    "Draw" -> Draw(
+                        count = value ?: 1,
+                        trigger = entryTrigger
+                    )
+
+                    "AddCounter" -> AddCounterEffect(
+                        amount = obj["amount"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+                            ?: value
+                            ?: 1,
+                        trigger = entryTrigger
+                    )
+
                     else -> null
                 }
                 effect?.let { effectList.add(it) }

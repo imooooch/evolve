@@ -4,12 +4,12 @@
   "baseAbilities": ["Ward","Aura","Drain","Bane","Assail"],
   "effects": [
     {
-      "timing": "EvolveCost",
+      "trigger": "EvolveCost",
       "cost": 1,
       "type": "Evolve"
     },
     {
-      "timing": "Fanfare",
+      "trigger": "Fanfare",
       "optional": true,
       "cost": {
         "type": "ReturnOtherCardToHand",
