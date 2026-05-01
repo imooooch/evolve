@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
+import com.example.evolve.battle.ImageDisplaySide
 import com.example.evolve.ui.components.CardWithStats
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -93,7 +94,10 @@ fun FieldCardSlot(
                         if (currentCard != null) {
                             logFieldCardInfo(currentCard)
                             Log.d("クリック", "PlayerFieldArea ${index + 1}番 クリック：${currentCard.name}")
-                            viewModel.showImageFromCard(currentCard)
+                            viewModel.showImageFromCardOnSide(
+                                currentCard,
+                                ImageDisplaySide.Top
+                            )
                         }
                     }
                 },
@@ -102,7 +106,10 @@ fun FieldCardSlot(
                         logFieldCardInfo(currentCard)
                         viewModel.highlightFieldCard(index)
                         Log.d("長押し", "PlayerFieldArea 長押し：${currentCard.name}")
-                        viewModel.showImageFromCard(currentCard)
+                        viewModel.showImageFromCardOnSide(
+                            currentCard,
+                            ImageDisplaySide.Top
+                        )
                     }
                 }
             )
@@ -163,14 +170,7 @@ fun PlayerFieldArea(
     val coroutineScope = rememberCoroutineScope()
 
     Box(
-        modifier = modifier.fillMaxSize().pointerInput(isImageShown) {
-            detectTapGestures {
-                if (isImageShown) {
-                    Log.d("タップ", "拡大画像とメニューを非表示（全画面タップ）")
-                    viewModel.clearImageAndMenu()
-                }
-            }
-        }
+        modifier = modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

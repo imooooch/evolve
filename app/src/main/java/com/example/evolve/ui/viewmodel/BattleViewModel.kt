@@ -24,6 +24,7 @@ import com.example.evolve.battle.CardStateHandler
 import com.example.evolve.battle.DeckLoader
 import com.example.evolve.battle.EvolveHandler
 import com.example.evolve.battle.BattleViewMode
+import com.example.evolve.battle.ImageDisplaySide
 import com.example.evolve.battle.ViewSide
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -59,6 +60,16 @@ class BattleViewModel(
     private val _viewMode = MutableStateFlow(BattleViewMode.Versus)
     val viewMode = _viewMode.asStateFlow()
 
+    private val _imageDisplaySide = MutableStateFlow(ImageDisplaySide.Top)
+    val imageDisplaySide = _imageDisplaySide.asStateFlow()
+
+    fun showImageFromCardOnSide(
+        card: CardData,
+        side: ImageDisplaySide
+    ) {
+        _imageDisplaySide.value = side
+        showImageFromCard(card)
+    }
     fun toggleViewSide() {
         _viewSide.value =
             if (_viewSide.value == ViewSide.Player1) {

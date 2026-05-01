@@ -22,21 +22,24 @@
     import androidx.compose.ui.text.style.TextAlign
     import androidx.compose.animation.AnimatedVisibility
     import androidx.compose.foundation.gestures.detectTapGestures
+    import androidx.compose.material3.Button
+    import androidx.compose.material3.ButtonDefaults
     import androidx.compose.runtime.*
     import androidx.compose.ui.graphics.ImageBitmap
+    import androidx.compose.ui.graphics.RectangleShape
     import androidx.compose.ui.graphics.graphicsLayer
     import androidx.compose.ui.input.pointer.pointerInput
     import androidx.compose.ui.platform.LocalConfiguration
     import androidx.compose.ui.zIndex
     import com.example.evolve.ui.viewmodel.BattleViewModel
     import androidx.lifecycle.viewmodel.compose.viewModel
+    import com.example.evolve.battle.ImageDisplaySide
     import com.example.evolve.battle.ViewSide
     import com.example.evolve.ui.components.SingleClickButton
     import com.example.evolve.model.CardData
     import com.example.evolve.ui.utils.loadCardImage
     import com.example.evolve.ui.screens.battlescreen.Player.*
     import com.example.evolve.ui.screens.battlescreen.Opponent.*
-    import com.example.evolve.ui.components.CardWithStats
 
     val exAreaWidthRatio = 0.65f // EXエリア全体の幅
     val exAreaHeightRatio = 0.08f // EXエリアの高さ
@@ -147,10 +150,11 @@
             val lastCard = graveyardCards.lastOrNull()
             val lastBanishCard = banishCards.lastOrNull()
 
-
+            val imageDisplaySide by viewModel.imageDisplaySide.collectAsState()
 
 
             // ✅ 共有画像表示エリア（他機能でも利用可能）
+// 背景
             Image(
                 bitmap = remember {
                     val inputStream = context.assets.open("images/battle/table.png")
@@ -158,7 +162,15 @@
                 }.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(selectedImagePath) {
+                        detectTapGestures {
+                            if (selectedImagePath.isNotEmpty()) {
+                                viewModel.clearImageAndMenu()
+                            }
+                        }
+                    }
             )
             EPStatusArea(
                 modifier = Modifier
@@ -196,7 +208,8 @@
                     .align(Alignment.TopCenter),
                 screenWidth = screenWidth,
                 screenHeight = screenHeight,
-                fieldCards = topPlayer.field // ← 追加
+                fieldCards = topPlayer.field,
+                viewModel = viewModel,
             )
             OpponentGraveyardArea(
                 modifier = Modifier
@@ -347,7 +360,7 @@
                 screenWidth = screenWidth,
                 screenHeight = screenHeight,
                 fieldCards = bottomPlayer.field,
-                viewModel = viewModel // ✅ 忘れずに渡す
+                viewModel = viewModel
             )
             PlayerEvolveDeckArea(
                 modifier = Modifier
@@ -461,27 +474,57 @@
             if (selectedImagePath.isNotEmpty()) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.45f) // ✅ 画面の上半分だけタップをブロック
-                        .zIndex(100f)
-                        .pointerInput(Unit) {
-                            detectTapGestures {
-                                viewModel.clearImageAndMenu()
-                            }
-                        }
+                        .fillMaxSize()
+                        .zIndex(90f)
                 ) {
-                    Image(
-                        bitmap = loadCardImage(selectedImagePath),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
+                    Box(
                         modifier = Modifier
-                            .size(400.dp)
-                            .align(Alignment.TopCenter)
-                            .offset(y = 16.dp)
-                    )
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.45f)
+                            .align(
+                                if (imageDisplaySide == ImageDisplaySide.Top) {
+                                    Alignment.TopCenter
+                                } else {
+                                    Alignment.BottomCenter
+                                }
+                            )
+                    ) {
+                        Button(
+                            onClick = {
+                                viewModel.clearImageAndMenu()
+                            },
+                            shape = RectangleShape,
+                            modifier = Modifier
+                                .size(400.dp)
+                                .align(
+                                    if (imageDisplaySide == ImageDisplaySide.Top) {
+                                        Alignment.TopCenter
+                                    } else {
+                                        Alignment.BottomCenter
+                                    }
+                                )
+                                .offset(
+                                    y = if (imageDisplaySide == ImageDisplaySide.Top) {
+                                        16.dp
+                                    } else {
+                                        (-55).dp
+                                    }
+                                ),
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            )
+                        ) {
+                            Image(
+                                bitmap = loadCardImage(selectedImagePath),
+                                contentDescription = null,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
                 }
             }
-
             // 🔲 ここに表示画像を切り替えられるようにする（例: 選択中カード、能力説明など）
             // Image(bitmap = ..., contentDescription = ..., modifier = Modifier.size(...))
 

@@ -25,6 +25,7 @@ import com.example.evolve.ui.utils.loadCardImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.border
+import com.example.evolve.battle.ImageDisplaySide
 
 @Composable
 fun PlayerHandArea(
@@ -75,7 +76,10 @@ fun PlayerHandArea(
         val validIndex = selectedHandIndex
 
         if (validIndex != null && validIndex in cards.indices) {
-            viewModel.showImageFromCard(cards[validIndex])
+            viewModel.showImageFromCardOnSide(
+                cards[validIndex],
+                ImageDisplaySide.Top
+            )
         } else {
             viewModel.clearImageAndMenu()
         }
