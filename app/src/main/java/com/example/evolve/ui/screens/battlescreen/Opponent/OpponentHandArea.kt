@@ -1,6 +1,7 @@
 package com.example.evolve.ui.screens.battlescreen.Opponent
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -27,7 +29,9 @@ fun OpponentHandArea(
     cardHeightRatio: Float = 0.4f,
     maxRotation: Float = 20f,
     baseYRatio: Float = 0.25f,
-    downwardFactorRatio: Float = 0.005f
+    downwardFactorRatio: Float = 0.005f,
+    onCardPlayed: (Int) -> Unit = {}
+
 ) {
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
@@ -73,6 +77,13 @@ fun OpponentHandArea(
                         rotationZ = info.rotation
                     }
                     .zIndex(index.toFloat())
+                    .pointerInput(index) {
+                        detectTapGestures(
+                            onTap = {
+                                onCardPlayed(index)
+                            }
+                        )
+                    }
             ) {
                 Image(
                     bitmap = loadCardImage("images/battle/Back.jpg"),

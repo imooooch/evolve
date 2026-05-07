@@ -153,7 +153,10 @@
 
             val imageDisplaySide by viewModel.imageDisplaySide.collectAsState()
             val interactionSource = remember { MutableInteractionSource() }
-
+            val topSide = when (viewSide) {
+                ViewSide.Player1 -> ViewSide.Player2
+                ViewSide.Player2 -> ViewSide.Player1
+            }
             // ✅ 共有画像表示エリア（他機能でも利用可能）
 // 背景
             Image(
@@ -196,7 +199,11 @@
                     )
                     .offset(y = with(density) { (screenHeight * 0.07f).toDp() })
                     .align(Alignment.TopCenter),
-                cards = opponentHand
+                cards = opponentHand,
+                onCardPlayed = { index ->
+                    viewModel.playCardFromHand(index, topSide)
+                    viewModel.clearImageAndMenu()
+                }
             )
             OpponentEXArea(
                 modifier = Modifier
@@ -250,7 +257,8 @@
                     )
                     .offset(x = -10.dp, y = with(density) { (screenHeight * 0.239f).toDp() })
                     .align(Alignment.TopEnd),
-                hasCard = isOpponentEvolveDeckOccupied
+                hasCard = isOpponentEvolveDeckOccupied,
+                evolveCards = topPlayer.evolveDeck
             )
             OpponentPPStatusArea(
                 modifier = Modifier
@@ -467,7 +475,7 @@
                 cards = playerHand,
                 viewModel = viewModel,
                 onCardPlayed = { index ->
-                    viewModel.playCardFromHand(index)
+                    viewModel.playCardFromHand(index, viewSide)
                     viewModel.clearImageAndMenu()
                 }
             )

@@ -143,13 +143,73 @@ class BattleViewModel(
         _battleState.update { state ->
             state ?: return@update null
 
-            evolveHandler.evolveCard(
-                state = state,
-                index = index,
-                baseCard = baseCard,
-                evolvedCardData = evolvedCardData,
-                originalBaseCard = originalBaseCard
-            )
+            when (_viewSide.value) {
+                ViewSide.Player1 -> {
+                    val player = state.player1
+                    if (index !in player.field.indices) return@update state
+                    if (player.field[index].card != baseCard.card) return@update state
+                    if (player.field[index].isEvolved) return@update state
+
+                    val newEvolveDeck = player.evolveDeck.toMutableList()
+                    val removeIndex = newEvolveDeck.indexOfFirst {
+                        it.card == evolvedCardData.card && !it.isFaceUp
+                    }
+                    if (removeIndex == -1) return@update state
+
+                    newEvolveDeck.removeAt(removeIndex)
+
+                    val evolvedCard = evolvedCardData.copy(
+                        isEvolved = true,
+                        originalCard = originalBaseCard,
+                        isFaceUp = true,
+                        isActed = player.field[index].isActed
+                    )
+
+                    val newField = player.field.toMutableList().apply {
+                        set(index, evolvedCard)
+                    }
+
+                    state.copy(
+                        player1 = player.copy(
+                            field = newField,
+                            evolveDeck = newEvolveDeck
+                        )
+                    )
+                }
+
+                ViewSide.Player2 -> {
+                    val player = state.player2
+                    if (index !in player.field.indices) return@update state
+                    if (player.field[index].card != baseCard.card) return@update state
+                    if (player.field[index].isEvolved) return@update state
+
+                    val newEvolveDeck = player.evolveDeck.toMutableList()
+                    val removeIndex = newEvolveDeck.indexOfFirst {
+                        it.card == evolvedCardData.card && !it.isFaceUp
+                    }
+                    if (removeIndex == -1) return@update state
+
+                    newEvolveDeck.removeAt(removeIndex)
+
+                    val evolvedCard = evolvedCardData.copy(
+                        isEvolved = true,
+                        originalCard = originalBaseCard,
+                        isFaceUp = true,
+                        isActed = player.field[index].isActed
+                    )
+
+                    val newField = player.field.toMutableList().apply {
+                        set(index, evolvedCard)
+                    }
+
+                    state.copy(
+                        player2 = player.copy(
+                            field = newField,
+                            evolveDeck = newEvolveDeck
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -169,10 +229,60 @@ class BattleViewModel(
         uiStateController.showImageFromCard(card.expansion, card.image)
     }
 
-    fun playCardFromHand(index: Int) {
+    fun playCardFromHand(
+        index: Int,
+        owner: ViewSide
+    ) {
         _battleState.update { state ->
-            state ?: return@update null
-            cardPlayHandler.playCardFromHand(state, index)
+            if (state == null) return@update null
+
+            when (owner) {
+                ViewSide.Player1 -> {
+                    val player = state.player1
+                    if (index !in player.hand.indices) return@update state
+
+                    if (player.field.size >= 5) return@update state
+
+                    val card = player.hand[index]
+                    val newHand = player.hand.toMutableList().apply {
+                        removeAt(index)
+                    }
+
+                    val newField = player.field.toMutableList().apply {
+                        add(card)
+                    }
+
+                    state.copy(
+                        player1 = player.copy(
+                            hand = newHand,
+                            field = newField
+                        )
+                    )
+                }
+
+                ViewSide.Player2 -> {
+                    val player = state.player2
+                    if (index !in player.hand.indices) return@update state
+
+                    if (player.field.size >= 5) return@update state
+
+                    val card = player.hand[index]
+                    val newHand = player.hand.toMutableList().apply {
+                        removeAt(index)
+                    }
+
+                    val newField = player.field.toMutableList().apply {
+                        add(card)
+                    }
+
+                    state.copy(
+                        player2 = player.copy(
+                            hand = newHand,
+                            field = newField
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -189,16 +299,36 @@ class BattleViewModel(
     }
 
     fun actFieldCard(index: Int) {
-        _battleState.update { state ->
-            state ?: return@update null
-            cardStateHandler.actFieldCard(state, index)
-        }
+        setFieldCardAct(index, true)
     }
 
     fun setFieldCardAct(index: Int, act: Boolean) {
         _battleState.update { state ->
             state ?: return@update null
-            cardStateHandler.setFieldCardAct(state, index, act)
+
+            when (_viewSide.value) {
+                ViewSide.Player1 -> {
+                    val field = state.player1.field.toMutableList()
+                    if (index !in field.indices) return@update state
+
+                    field[index] = field[index].copy(isActed = act)
+
+                    state.copy(
+                        player1 = state.player1.copy(field = field)
+                    )
+                }
+
+                ViewSide.Player2 -> {
+                    val field = state.player2.field.toMutableList()
+                    if (index !in field.indices) return@update state
+
+                    field[index] = field[index].copy(isActed = act)
+
+                    state.copy(
+                        player2 = state.player2.copy(field = field)
+                    )
+                }
+            }
         }
     }
 
