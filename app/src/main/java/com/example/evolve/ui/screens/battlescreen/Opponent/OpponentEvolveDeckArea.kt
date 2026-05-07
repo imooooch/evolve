@@ -18,6 +18,7 @@ fun OpponentEvolveDeckArea(
     evolveCards: List<CardData> = emptyList()
 ) {
     val faceUpCards = evolveCards.filter { it.isFaceUp }
+    val topFaceUpCard = faceUpCards.lastOrNull()
     var showList by remember { mutableStateOf(false) }
     val topCard = evolveCards.lastOrNull()
 
@@ -28,9 +29,15 @@ fun OpponentEvolveDeckArea(
                 showList = true
             }
     ) {
-        if (hasCard && topCard != null) {
+        if (hasCard) {
             Image(
-                bitmap = loadCardImage("images/battle/Back.jpg"),
+                bitmap = loadCardImage(
+                    if (topFaceUpCard != null) {
+                        "images/${topFaceUpCard.expansion}/${topFaceUpCard.image}"
+                    } else {
+                        "images/battle/Back.jpg"
+                    }
+                ),
                 contentDescription = "Opponent Evolve Deck",
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
