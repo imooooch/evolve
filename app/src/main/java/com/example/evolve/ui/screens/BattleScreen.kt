@@ -122,8 +122,10 @@
             val playerGraveyardCount = bottomPlayer.graveyard.size
             val opponentGraveyardCount = topPlayer.graveyard.size
 
-            val playerEvolveDeckCount = bottomPlayer.evolveDeck.size
-            val opponentEvolveDeckCount = topPlayer.evolveDeck.size
+            val playerFaceDownEvolveCount =
+                bottomPlayer.evolveDeck.count { !it.isFaceUp }
+            val opponentFaceDownEvolveCount =
+                topPlayer.evolveDeck.count { !it.isFaceUp }
 
             val isEvolveDeckOccupied = bottomPlayer.evolveDeck.isNotEmpty()
             val isOpponentEvolveDeckOccupied = topPlayer.evolveDeck.isNotEmpty()
@@ -208,7 +210,9 @@
             OpponentEXArea(
                 modifier = Modifier
                     .offset(y = with(density) { (screenHeight * 0.196f).toDp() })
-                    .align(Alignment.TopCenter)
+                    .align(Alignment.TopCenter),
+                exCards = topPlayer.exArea,
+                viewModel = viewModel
             )
             OpponentFieldArea(
                 modifier = Modifier
@@ -326,9 +330,9 @@
                         width = with(LocalDensity.current) { (screenWidth * CountWidthRatio).toDp() },
                         height = with(LocalDensity.current) { (screenHeight * CountHeightRatio).toDp() }
                     )
-                    .offset(x = -5.dp, y = with(LocalDensity.current) { (screenHeight * 0.215f).toDp() }) // 相手用の位置調整
+                    .offset(x = -5.dp, y = with(LocalDensity.current) { (screenHeight * 0.215f).toDp() })
                     .align(Alignment.TopEnd),
-                count = opponentEvolveDeckCount
+                count = opponentFaceDownEvolveCount
             )
             PlayerHealthArea(
                 modifier = Modifier
@@ -402,7 +406,7 @@
                     )
                     .offset(x = 5.dp, y = with(LocalDensity.current) { (screenHeight * 0.734f).toDp() })
                     .align(Alignment.TopStart),
-                facedownCount = facedownCount
+                facedownCount = playerFaceDownEvolveCount
             )
 
 

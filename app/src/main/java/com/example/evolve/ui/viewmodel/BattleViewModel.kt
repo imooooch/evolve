@@ -359,6 +359,16 @@ class BattleViewModel(
         _battleState.update { state ->
             state ?: return@update null
 
+            val targetPlayer = when (_viewSide.value) {
+                ViewSide.Player1 -> state.player1
+                ViewSide.Player2 -> state.player2
+            }
+
+            // EXエリアが5枚以上なら移動しない
+            if (targetPlayer.exArea.size >= 5) {
+                return@update state
+            }
+
             applyFieldMoveByViewSide(state) { tempState ->
                 cardMovementHandler.moveFieldCardToEX(tempState, index)
             }
