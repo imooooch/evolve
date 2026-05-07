@@ -63,6 +63,26 @@ class BattleViewModel(
     private val _imageDisplaySide = MutableStateFlow(ImageDisplaySide.Top)
     val imageDisplaySide = _imageDisplaySide.asStateFlow()
 
+    private fun applyFieldMoveByViewSide(
+        state: BattleState,
+        move: (BattleState) -> BattleState
+    ): BattleState {
+        val originalTurnPlayer = state.turnPlayer
+
+        val targetPlayerName = when (_viewSide.value) {
+            ViewSide.Player1 -> state.player1.name
+            ViewSide.Player2 -> state.player2.name
+        }
+
+        val tempState = state.copy(
+            turnPlayer = targetPlayerName
+        )
+
+        return move(tempState).copy(
+            turnPlayer = originalTurnPlayer
+        )
+    }
+
     fun showImageFromCardOnSide(
         card: CardData,
         side: ImageDisplaySide
@@ -115,12 +135,15 @@ class BattleViewModel(
         _battleState.value = state
     }
 
-    val playerEvolveDeck: StateFlow<List<CardData>?>
+    val playerEvolveDeck: StateFlow<List<CardData>>
         get() = _battleState.map { state ->
-            if (state?.turnPlayer == state?.player1?.name) {
-                state?.player1?.evolveDeck
+            if (state == null) {
+                emptyList()
             } else {
-                state?.player2?.evolveDeck ?: emptyList()
+                when (_viewSide.value) {
+                    ViewSide.Player1 -> state.player1.evolveDeck
+                    ViewSide.Player2 -> state.player2.evolveDeck
+                }
             }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -335,7 +358,10 @@ class BattleViewModel(
     fun moveFieldCardToEX(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-            cardMovementHandler.moveFieldCardToEX(state, index)
+
+            applyFieldMoveByViewSide(state) { tempState ->
+                cardMovementHandler.moveFieldCardToEX(tempState, index)
+            }
         }
     }
 
@@ -350,7 +376,10 @@ class BattleViewModel(
     fun playCardFromExArea(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-            cardPlayHandler.playCardFromExArea(state, index)
+
+            applyFieldMoveByViewSide(state) { tempState ->
+                cardPlayHandler.playCardFromExArea(tempState, index)
+            }
         }
     }
     //カード状態のリセット
@@ -394,19 +423,23 @@ class BattleViewModel(
     }
 
 
-    //PlayerGraveyardへ移動
     fun moveFieldCardToGrave(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-            cardMovementHandler.moveFieldCardToGrave(state, index)
+
+            applyFieldMoveByViewSide(state) { tempState ->
+                cardMovementHandler.moveFieldCardToGrave(tempState, index)
+            }
         }
     }
 
-    //PlayerBanishAreaへ移動
     fun moveFieldCardToBanish(index: Int) {
         _battleState.update { state ->
             state ?: return@update null
-            cardMovementHandler.moveFieldCardToBanish(state, index)
+
+            applyFieldMoveByViewSide(state) { tempState ->
+                cardMovementHandler.moveFieldCardToBanish(tempState, index)
+            }
         }
     }
 
