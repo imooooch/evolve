@@ -20,7 +20,6 @@ fun OpponentEvolveDeckArea(
     val faceUpCards = evolveCards.filter { it.isFaceUp }
     val topFaceUpCard = faceUpCards.lastOrNull()
     var showList by remember { mutableStateOf(false) }
-    val topCard = evolveCards.lastOrNull()
 
     Box(
         modifier = modifier
